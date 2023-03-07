@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-
+namespace DCR;
 [ApiController]
 [Route("[controller]")]
 public class DCRController : ControllerBase
