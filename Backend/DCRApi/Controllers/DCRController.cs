@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 namespace DCR;
 [ApiController]
 [Route("[controller]")]
@@ -16,7 +17,14 @@ public class DCRController : ControllerBase
     public string Get(string id)
     {
         _logger.LogTrace("Tried getting the DCR id");
-        return $"Tried getting id : {id}";
+        BlockChain blockchain = new BlockChain(2);
+        List<Transaction> tx = new List<Transaction>(){new Transaction("Foo", Action.Create, "Bar")};
+        Block newblock = new Block(tx);
+        blockchain.AddBlock(newblock);
+        Block newblock2 = new Block(new List<Transaction>());
+        blockchain.AddBlock(newblock2);
+        Console.WriteLine($"Block validity: {blockchain.IsValid()}");
+        return JsonConvert.SerializeObject(blockchain);
     }
 
     [HttpPost("{id}")]

@@ -1,31 +1,27 @@
+using System.Text;
+using System.Security.Cryptography;
+using Newtonsoft.Json;
+
 namespace DCR;
 public class Block
 {
-    private string _previousBlockHash;
+    public string? PreviousBlockHash {get; set;}
     private DateTime _timestamp;
-    private int _nonce;
+    public string Hash {get; private set;}
+    public int Nonce {get; private set;}
     private List<Transaction> _transactions;
 
-    public Block(string previousBlockHash, List<Transaction> transactions) 
+    public Block(List<Transaction> transactions) 
     {
-        _previousBlockHash = previousBlockHash;
         _timestamp = DateTime.Now;
-        _nonce = 0;
+        Nonce = 0;
         _transactions = transactions;
-    }
-    public string PreviousBlockHash 
-    {
-        get => _previousBlockHash;
+        Hash = "";
     }
 
     public DateTime Timestamp 
     {
         get => _timestamp;
-    }
-
-    public int Nonce 
-    {
-       get => _nonce;
     }
 
     public List<Transaction> Transactions 
@@ -35,11 +31,23 @@ public class Block
 
     public string GetHash() 
     {
-        throw new NotImplementedException();
+        string jsonTx = JsonConvert.SerializeObject(_transactions);
+        // Hash to be calculated for all fields except Hash
+        string inputstring = $"{PreviousBlockHash}{_timestamp}{Nonce}{jsonTx}";
+
+        byte[] inputbytes = Encoding.ASCII.GetBytes(inputstring);
+        byte[] hash = SHA256.HashData(inputbytes);
+        return Convert.ToBase64String(hash);
     }
     
-    public void Mine()
+    public void Mine(int difficulty)
     {
-        throw new NotImplementedException();
+        Hash = GetHash();
+        string leadingzeroes = new string('0', difficulty);
+        while (Hash.Substring(0, difficulty) != leadingzeroes) 
+        {
+            Nonce++;
+            Hash = GetHash();
+        }
     }
 }
