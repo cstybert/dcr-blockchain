@@ -33,13 +33,15 @@ namespace Models
             switch (type)
             {
                 case RelationType.CONDITION:
-                    return "-->*";
+                    return @"-->\*";
                 case RelationType.RESPONSE:
-                    return "*-->";
+                    return @"\*-->";
                 case RelationType.EXCLUSION:
-                    return "-->%";
+                    return @"-->\%";
+                case RelationType.INCLUSION:
+                    return @"-->\+";
                 default:
-                    return "-->+";
+                    throw new NotImplementedException();
             }
         }
     }
