@@ -1,14 +1,19 @@
 namespace DCR;
+
+public enum Action
+{
+    Create,
+    Update
+}
 public class Transaction
 {
-    private string _tmp;
-    public Transaction() 
+    public string Actor {get; init;}
+    public Action Action {get; init;}
+    public string Graph {get; init;}
+    public Transaction(string actor, Action action, string graph) 
     {
-        _tmp = "foo";
-    }
-
-    public string State 
-    {
-        get => _tmp;
+        Actor = actor;
+        Action = action;
+        Graph = graph;
     }
 }
