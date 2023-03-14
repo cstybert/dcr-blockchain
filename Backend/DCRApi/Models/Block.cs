@@ -6,6 +6,7 @@ namespace DCR;
 public class Block
 {
     public string? PreviousBlockHash {get; set;}
+    [JsonProperty]
     private DateTime _timestamp;
     public string Hash {get; private set;}
     public int Nonce {get; private set;}
@@ -17,6 +18,16 @@ public class Block
         Nonce = 0;
         _transactions = transactions;
         Hash = "";
+    }
+
+    [JsonConstructor]
+    private Block(string pvhash, DateTime timestamp, string hash, int nonce,  List<Transaction> transactions) 
+    {
+        PreviousBlockHash = pvhash;
+        _timestamp = Timestamp;
+        Hash = hash;
+        Nonce = nonce;
+        _transactions = transactions;
     }
 
     public DateTime Timestamp 

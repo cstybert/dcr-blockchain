@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 namespace DCR;
 public class BlockChain
 {
@@ -9,6 +10,13 @@ public class BlockChain
         _difficulty = difficulty;
         _chain = new List<Block>();
         Initialize();
+    }
+
+    [JsonConstructor]
+    private BlockChain(List<Block> chain, int difficulty)
+    {
+        _chain = chain;
+        _difficulty = difficulty;
     }
 
     private void Initialize() 
@@ -67,5 +75,20 @@ public class BlockChain
     public Block GetHead()
     {
         return _chain[_chain.Count - 1];
+    }
+
+    public string GetGraph(string id) 
+    {
+        foreach (Block block in _chain)
+        {
+            foreach (Transaction transaction in block.Transactions)
+            {
+                if (transaction.Graph == id) 
+                {
+                    return transaction.Graph;
+                }
+            }
+        }
+        return "Could not find id";
     }
 }
