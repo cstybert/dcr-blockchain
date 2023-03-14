@@ -21,12 +21,30 @@ namespace Business
 
         public Graph Create(List<Activity> activities, List<Relation> relations)
         {
+            UpdateEnabled(activities, relations);
             return new Graph(activities, relations);
         }
 
         public Graph Create(String input)
         {
             return ParseInput(input);
+        }
+
+        public void UpdateEnabled(List<Activity> activities, List<Relation> relations) {
+            foreach (Relation rel in relations) {
+                rel.Source = GetActivity(rel.Source.Title, activities);
+                rel.Target = GetActivity(rel.Target.Title, activities);
+
+                if (!rel.Target.Included) {
+                    rel.Target.Enabled = false;
+                } else if (rel.Type == RelationType.CONDITION) {
+                    if (rel.Source.Included && !rel.Source.Executed) {
+                        rel.Target.Enabled = false;
+                    } else {
+                        rel.Target.Enabled = true;
+                    }
+                }
+            }
         }
 
         // TODO: Parse input (single line and multiple) to Graph instance
@@ -66,9 +84,6 @@ namespace Business
                 var parsedRelationType = RelationTypeMethods.ParseStringToRelationType(groups[2].Value);
                 var relation = new Relation(parsedRelationType, src, trgt);
                 
-                // Update related activites
-                src.Relations.Add(relation);
-                trgt.Relations.Add(relation);
                 relations.Add(relation);
             }
             return relations;
