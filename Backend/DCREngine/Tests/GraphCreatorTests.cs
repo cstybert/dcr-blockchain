@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using Models;
 using Business;
 
@@ -17,10 +18,40 @@ public class GraphCreatorTests
     [Test]
     public void Create_EmptyGraph()
     {
-        var graph = graphCreator.create("");
+        var graph = graphCreator.Create("");
 
         Assert.AreEqual(0, graph.Activities.Count);
         Assert.AreEqual(0, graph.Relations.Count);
-        Assert.AreEqual(false, graph.Executing);
+    }
+
+    [Test]
+    public void Create_SimpleGraph()
+    {
+        var src = new Activity("A");
+        var trgt = new Activity("B");
+        var activities = new List<Activity> {src, trgt};
+        var relations = new List<Relation> {new Relation(RelationType.CONDITION, src, trgt)};
+
+        var graph = graphCreator.Create(activities, relations);
+
+        Assert.AreEqual(2, graph.Activities.Count);
+        Assert.AreEqual(1, graph.Relations.Count);
+    }
+
+    [Test]
+    public void Parse_SimpleGraph()
+    {
+        var input = "\"ActivityA\", \"ActivityB\", \"ActivityA\"-->*\"ActivityB\"";
+
+        var graph = graphCreator.Create(input);
+
+        Assert.AreEqual(2, graph.Activities.Count);
+        Assert.AreEqual("ActivityA", graph.Activities[0].Title);
+        Assert.AreEqual("ActivityB", graph.Activities[1].Title);
+
+        Assert.AreEqual(1, graph.Relations.Count);
+        Assert.AreEqual(RelationType.CONDITION, graph.Relations[0].Type);
+        Assert.AreEqual("ActivityA", graph.Relations[0].Source.Title);
+        Assert.AreEqual("ActivityB", graph.Relations[0].Target.Title);
     }
 }

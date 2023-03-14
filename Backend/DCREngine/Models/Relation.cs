@@ -17,8 +17,8 @@ namespace Models
         {
             var typ = RelationTypeMethods.ParseRelationTypeToString(Type).Replace("\\", "");
             var src = Source != null ? Source.Title : "<none>";
-            var trg = Target != null ? Target.Title : "<none>";
-            return $"{src}{typ}{trg}";
+            var trgt = Target != null ? Target.Title : "<none>";
+            return $"{src}{typ}{trgt}";
         }
     }
 }

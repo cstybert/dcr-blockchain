@@ -34,9 +34,20 @@ namespace Models
             Relations = new List<Relation>();
         }
 
-        public void Execute() {
-            Executed = true;
-            // TODO: Propegate through Relations list
+        //TODO: Verify implementation
+        public bool Enabled 
+        {
+            get {
+                if (!this.Included) {
+                    return false;
+                }
+                foreach (Relation rel in Relations) {
+                    if (rel.Source.Title != Title && rel.Source.Included && !rel.Source.Executed) {
+                        return false;
+                    }
+                }
+                return true;
+            }
         }
     }
 }
