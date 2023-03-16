@@ -1,0 +1,28 @@
+   
+.table-component {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  
+    .table {
+      border-collapse: collapse;
+      width: 100%;
+  
+      th, td {
+          border: 1px solid #dddddd;
+          text-align: center;
+          padding: 0px;
+      }
+  
+      tr:nth-child(even) {
+          background-color: #dddddd;
+      }
+  
+      input[type="text"] {
+          width: 100%;
+          box-sizing: border-box;
+          border: none;
+          background-color: transparent;
+      }
+    }
+}

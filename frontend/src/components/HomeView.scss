@@ -1,0 +1,45 @@
+.home-view {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #15202b;
+
+  .title {
+      width: 75%;
+      margin: 1rem;
+      text-align: center;
+      font-size: 4rem;
+  }
+
+  .top-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .button-container {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+    }
+  }
+
+  .submit-button {
+    margin: 0.5rem;
+  }
+
+  .tables-container {
+    height: 100%;
+    width: 75%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+
+    .table-container {
+      width: 33%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+}
