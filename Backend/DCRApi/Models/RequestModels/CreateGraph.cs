@@ -1,9 +1,11 @@
+using Models;
+
 public class CreateGraph
 {
     public string Actor {get; init;}
-    public string Graph {get; init;}
+    public Graph Graph {get; init;}
 
-    public CreateGraph(string actor, string graph) 
+    public CreateGraph(string actor, Graph graph) 
     {
         Actor = actor;
         Graph = graph;

@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Models;
+using Business;
 
 namespace DCR;
 [ApiController]
@@ -10,52 +12,62 @@ public class DCRController : ControllerBase
 
     private readonly ILogger<DCRController> _logger;
     private BlockChain _blockchain;
+    private BlockChainSerializer _blockChainSerializer;
+    private GraphSerializer _graphSerializer;
+    private GraphCreator _graphCreator;
+    private GraphExecutor _graphExecutor;
 
     public DCRController(ILogger<DCRController> logger)
     {
+        _graphSerializer = new GraphSerializer();
+        _blockChainSerializer = new BlockChainSerializer();
+        _graphCreator = new GraphCreator();
+        _graphExecutor = new GraphExecutor();
         _logger = logger;
+        _blockchain = new BlockChain(2);
         if (!System.IO.File.Exists("blockchain.json"))
         {
             _blockchain = new BlockChain(2);
-            using (StreamWriter sw = System.IO.File.CreateText("blockchain.json"))
-            {
-                sw.Write(JsonConvert.SerializeObject(_blockchain));
-            }
+            _blockchain.Save();
         }
         else
         {
-            string blockjson = System.IO.File.ReadAllText("blockchain.json");
-            _blockchain = JsonConvert.DeserializeObject<BlockChain>(blockjson)!;
+            var blockJson = System.IO.File.ReadAllText("blockchain.json");
+            _blockchain = _blockChainSerializer.Deserialize(blockJson);
         }
     }
 
     [HttpGet("{id}")]
-    public string Get(string id)
+    public IActionResult Get(string id)
     {
-        _logger.LogTrace("Tried getting the DCR id");
-        return _blockchain.GetGraph(id);
+        _logger.LogTrace($"Fetching graph {id}");
+        return Ok(_blockchain.GetGraph(id));
     }
     
-    [HttpPost("CreateGraph")]
-    public string Post(CreateGraph req)
+    [HttpPost("create")]
+    public IActionResult Post(CreateGraph req)
     {
-        _logger.LogTrace("Tried posting a DCR Graph");
-        Transaction tx = new Transaction(req.Actor, Action.Create, req.Graph);
-        List<Transaction> txl = new List<Transaction>(){tx};
-        Block newblock = new Block(txl);
-        _blockchain.AddBlock(newblock);
-        using (StreamWriter sw = System.IO.File.CreateText("blockchain.json"))
-        {
-            sw.Write(JsonConvert.SerializeObject(_blockchain));
-        }
+        _logger.LogTrace("Adding graph to blockchain");
+
+        var graph = _graphCreator.Create(req.Graph.Activities, req.Graph.Relations);
+        var tx = new Transaction(req.Actor, Action.Create, graph);
+        _blockchain.AddBlock(tx);
+        
         Console.WriteLine($"Block validity: {_blockchain.IsValid()}");
-        return JsonConvert.SerializeObject(_blockchain);
+        _logger.LogTrace($"Added graph {graph.ID}");
+        return Ok(graph);
     }
 
-    [HttpPost("updategraph/{id}")]
-    public string Update(string id)
+    [HttpPut("update/{id}")]
+    public IActionResult Put(string id, ExecuteActivity req)
     {
-        _logger.LogTrace("Tried updating the DCR id");
-        return $"Tried updating id : {id}";
+        _logger.LogTrace($"Executing activity {req.ExecutingActivity} in graph {id}");
+        var graph = _blockchain.GetGraph(id);
+        var updatedGraph = _graphExecutor.Execute(graph, req.ExecutingActivity);
+        var transaction = new Transaction(req.Actor, Action.Update, updatedGraph);
+        _blockchain.AddBlock(transaction);
+
+        _logger.LogTrace($"Updated graph {graph.ID}");
+        return Ok(updatedGraph);
     }
 }
