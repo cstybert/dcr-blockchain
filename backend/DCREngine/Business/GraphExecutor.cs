@@ -10,21 +10,21 @@ namespace Business
             _graphCreator = new GraphCreator();
         }
 
-        public Graph Execute(Graph graph, string activityTitle) // TODO: Create Action/Event data model to incapsulate triggered actions/events
+        public Graph Execute(Graph graph, string executingActivity) // TODO: Create Action/Event data model to incapsulate triggered actions/events
         {
-            var activity = GetActivity(activityTitle, graph.Activities);
+            var source = GetActivity(executingActivity, graph.Activities);
+            source.Executed = true;
+            source.Pending = false;
 
-            activity.Executed = true;
-            activity.Pending = false;
-
-            var relations = graph.Relations.Where(e => e.Source.Title == activity.Title);
+            var relations = graph.Relations.Where(e => e.Source == source.Title);
             foreach (Relation rel in relations) {
+                var target = GetActivity(rel.Target, graph.Activities);
                 if (rel.Type == RelationType.EXCLUSION) {
-                    rel.Target.Included = false;
+                    target.Included = false;
                 } else if (rel.Type == RelationType.INCLUSION) {
-                    rel.Target.Included = true;
+                    target.Included = true;
                 } else if (rel.Type == RelationType.RESPONSE) {
-                    rel.Target.Pending = true;
+                    target.Pending = true;
                 }
             }
 
