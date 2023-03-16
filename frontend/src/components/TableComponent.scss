@@ -11,7 +11,7 @@
       th, td {
           border: 1px solid #dddddd;
           text-align: center;
-          padding: 0px;
+          padding: 5px 10px;
       }
   
       tr:nth-child(even) {
@@ -24,5 +24,13 @@
           border: none;
           background-color: transparent;
       }
+
+      select {
+        width: 100%;
+        box-sizing: border-box;
+        border: none;
+        outline: none;
+        background-color: transparent;
+    }
     }
 }

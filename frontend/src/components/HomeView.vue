@@ -19,7 +19,7 @@
 
       <div class="table-container">
         <h2>Relations</h2>
-        <TableComponent :headers="relationHeaders" :data="relations"/>
+        <TableComponent :headers="relationHeaders" :data="relations" :activityTitles="activityTitles" :relationTypes="relationTypes"/>
         <button class="submit-button" @click="addRelation"> Add relation </button>
       </div>
     </div>
@@ -41,19 +41,40 @@ export default {
     return {
       searchId: "",
       isNewGraph: false,
-      activityHeaders: ["Title", "Pending", "Included", "Executed", "Enabled"],
+      activityHeaders: [
+        {title: "Title", type: "text"},
+        {title: "Pending", type: "checkbox"},
+        {title: "Included", type: "checkbox"},
+        {title: "Executed", type: "checkbox"},
+        {title: "Enabled", type: "checkbox"}],
       activities: [
         { title: "A", pending: true, included: true, executed: false, enabled: true },
         { title: "B", pending: true, included: false, executed: false, enabled: false },
         { title: "C", pending: false, included: true, executed: false, enabled: true},
         { title: "D", pending: false, included: true, executed: false, enabled: true },
       ],
-      relationHeaders: ["Source", "Type", "Target"],
+      relationHeaders: [
+        {title: "Source", type: "select activity"},
+        {title: "Type", type: "select relation"},
+        {title: "Target", type: "select activity"}
+      ],
+      relationTypes: [
+        {id: 0, text: '-->* (condition)'},
+        {id: 1, text: '*--> (response)'},
+        {id: 2, text: '-->% (excludes)'},
+        {id: 3, text: '-->+ (includes)'},
+      ],
       relations: [
         { source: "A", type: 0, target: "B" },
         { source: "B", type: 1, target: "C" },
         { source: "C", type: 2, target: "D" },
       ],
+    }
+  },
+
+  computed: {
+    activityTitles() {
+      return this.activities.map(item => item.title);
     }
   },
 
@@ -65,7 +86,7 @@ export default {
 
     newGraph() {
       this.activities = [{ title: "", pending: false, included: true, executed: false, enabled: true }];
-      this.relations = [{ source: "", type: 0, target: "" }];
+      this.relations = [{ source: "", type: null, target: "" }];
       this.isNewGraph = true;
     },
 
@@ -74,7 +95,7 @@ export default {
     },
 
     addRelation() {
-      this.relations.push({ source: "", type: 0, target: "" });
+      this.relations.push({ source: "", type: null, target: "" });
     },
 
     createGraph() {
