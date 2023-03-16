@@ -1,15 +1,18 @@
 using Newtonsoft.Json;
+using Models;
 namespace DCR;
 public class BlockChain
 {
     private List<Block> _chain;
     private int _difficulty;
+    private BlockChainSerializer _chainSerializer;
     private GraphSerializer _graphSerializer;
 
     public BlockChain(int difficulty) 
     {
         _difficulty = difficulty;
         _chain = new List<Block>();
+        _chainSerializer = new BlockChainSerializer();
         _graphSerializer = new GraphSerializer();
         Initialize();
     }
@@ -19,6 +22,7 @@ public class BlockChain
     {
         _chain = chain;
         _difficulty = difficulty;
+        _chainSerializer = new BlockChainSerializer();
         _graphSerializer = new GraphSerializer();
     }
 
@@ -78,7 +82,8 @@ public class BlockChain
     {
         block.PreviousBlockHash = GetHead().Hash;
         block.Mine(Difficulty);
-        _chain.Add(block);  
+        _chain.Add(block);
+        Save();
     }
 
     public Block GetHead()
@@ -86,20 +91,26 @@ public class BlockChain
         return _chain[_chain.Count - 1];
     }
 
-    public string GetGraph(string id) 
+    public Graph GetGraph(string id) 
     {
-        foreach (Block block in _chain)
+        foreach (Block block in Enumerable.Reverse(_chain))
         {
-
-            foreach (Transaction transaction in block.Transactions)
+            foreach (Transaction transaction in Enumerable.Reverse(block.Transactions))
             {
-                var transactionGraph = _graphSerializer.Deserialize(transaction.Graph);
-                if (transactionGraph.id == id) 
+                if (transaction.Graph.ID == id) 
                 {
                     return transaction.Graph;
                 }
             }
         }
-        return $"Could not find id {id}";
+        return null;
+    }
+
+    public void Save() {
+        var blockChainJson = _chainSerializer.Serialize(this);
+        using (StreamWriter sw = System.IO.File.CreateText("blockchain.json"))
+        {
+            sw.Write(blockChainJson);
+        }
     }
 }
