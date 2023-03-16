@@ -8,7 +8,7 @@ namespace Tests;
 
 public class GraphCreatorTests
 {
-    private GraphCreator graphCreator = new GraphCreator();
+    private GraphCreator _graphCreator = new GraphCreator();
 
     [SetUp]
     public void Setup()
@@ -18,7 +18,7 @@ public class GraphCreatorTests
     [Test]
     public void Create_EmptyGraph()
     {
-        var graph = graphCreator.Create("");
+        var graph = _graphCreator.Create("");
 
         Assert.AreEqual(0, graph.Activities.Count);
         Assert.AreEqual(0, graph.Relations.Count);
@@ -32,7 +32,7 @@ public class GraphCreatorTests
         var activities = new List<Activity> {src, trgt};
         var relations = new List<Relation> {new Relation(RelationType.CONDITION, src, trgt)};
 
-        var graph = graphCreator.Create(activities, relations);
+        var graph = _graphCreator.Create(activities, relations);
 
         Assert.AreEqual(2, graph.Activities.Count);
         Assert.AreEqual(1, graph.Relations.Count);
@@ -43,7 +43,7 @@ public class GraphCreatorTests
     {
         var input = "\"ActivityA\", \"ActivityB\", \"ActivityA\"-->*\"ActivityB\"";
 
-        var graph = graphCreator.Create(input);
+        var graph = _graphCreator.Create(input);
 
         Assert.AreEqual(2, graph.Activities.Count);
         Assert.AreEqual("ActivityA", graph.Activities[0].Title);

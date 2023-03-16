@@ -6,15 +6,15 @@ namespace Models
         public bool Pending { get; set; }
         public bool Included { get; set; }
         public bool Executed { get; set; }
-        public List<Relation> Relations { get; set; }
+        public bool Enabled { get; set; }
 
-        public Activity(string title, bool pending, bool included, bool executed, List<Relation> relations)
+        public Activity(string title, bool pending, bool included, bool executed)
         {
             Title = title;
             Pending = pending;
             Included = included;
             Executed = executed;
-            Relations = relations;
+            Enabled = true;
         }
 
         public Activity(string title, bool pending) {
@@ -22,7 +22,7 @@ namespace Models
             Pending = pending;
             Included = true;
             Executed = false;
-            Relations = new List<Relation>();
+            Enabled = true;
         }
 
         public Activity(string title)
@@ -31,23 +31,7 @@ namespace Models
             Pending = false;
             Included = true;
             Executed = false;
-            Relations = new List<Relation>();
-        }
-
-        //TODO: Verify implementation
-        public bool Enabled 
-        {
-            get {
-                if (!this.Included) {
-                    return false;
-                }
-                foreach (Relation rel in Relations) {
-                    if (rel.Source.Title != Title && rel.Source.Included && !rel.Source.Executed) {
-                        return false;
-                    }
-                }
-                return true;
-            }
+            Enabled = true;
         }
     }
 }

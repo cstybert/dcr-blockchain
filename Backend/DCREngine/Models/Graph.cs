@@ -2,6 +2,7 @@ namespace Models
 {
     public class Graph
     {
+        public string id { get; } = Guid.NewGuid().ToString();  
         public List<Activity> Activities { get; set; }
         public List<Relation> Relations { get; set; }
 
@@ -15,6 +16,12 @@ namespace Models
         {
             Activities = new List<Activity>();
             Relations = new List<Relation>();
+        }
+
+        public bool Accepting {
+            get {
+                return Activities.All(e => !(e.Included && e.Pending));
+            }
         }
     }
 }
