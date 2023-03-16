@@ -6,16 +6,16 @@ namespace Models
         public List<Activity> Activities { get; set; }
         public List<Relation> Relations { get; set; }
 
-        public Graph(List<Activity> activities, List<Relation> relations)
-        {
-            Activities = activities;
-            Relations = relations;
-        }
-
         public Graph()
         {
             Activities = new List<Activity>();
             Relations = new List<Relation>();
+        }
+
+        public Graph(List<Activity> activities, List<Relation> relations)
+        {
+            Activities = activities;
+            Relations = relations;
         }
 
         public bool Accepting {

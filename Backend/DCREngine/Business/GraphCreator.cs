@@ -32,16 +32,16 @@ namespace Business
 
         public void UpdateEnabled(List<Activity> activities, List<Relation> relations) {
             foreach (Relation rel in relations) {
-                rel.Source = GetActivity(rel.Source.Title, activities);
-                rel.Target = GetActivity(rel.Target.Title, activities);
+                var source = GetActivity(rel.Source, activities);
+                var target = GetActivity(rel.Target, activities);
 
-                if (!rel.Target.Included) {
-                    rel.Target.Enabled = false;
+                if (!target.Included) {
+                    target.Enabled = false;
                 } else if (rel.Type == RelationType.CONDITION) {
-                    if (rel.Source.Included && !rel.Source.Executed) {
-                        rel.Target.Enabled = false;
+                    if (source.Included && !source.Executed) {
+                        target.Enabled = false;
                     } else {
-                        rel.Target.Enabled = true;
+                        target.Enabled = true;
                     }
                 }
             }

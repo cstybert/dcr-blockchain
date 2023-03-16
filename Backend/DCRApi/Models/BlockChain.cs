@@ -4,11 +4,13 @@ public class BlockChain
 {
     private List<Block> _chain;
     private int _difficulty;
+    private GraphSerializer _graphSerializer;
 
     public BlockChain(int difficulty) 
     {
         _difficulty = difficulty;
         _chain = new List<Block>();
+        _graphSerializer = new GraphSerializer();
         Initialize();
     }
 
@@ -17,6 +19,7 @@ public class BlockChain
     {
         _chain = chain;
         _difficulty = difficulty;
+        _graphSerializer = new GraphSerializer();
     }
 
     private void Initialize() 
@@ -65,6 +68,12 @@ public class BlockChain
              && (_chain[i].Hash == _chain[i].GetHash());
     }
 
+    public void AddBlock(Transaction transaction) 
+    {
+        var block = new Block(new List<Transaction>{transaction});
+        AddBlock(block);
+    }
+
     public void AddBlock(Block block) 
     {
         block.PreviousBlockHash = GetHead().Hash;
@@ -81,14 +90,16 @@ public class BlockChain
     {
         foreach (Block block in _chain)
         {
+
             foreach (Transaction transaction in block.Transactions)
             {
-                if (transaction.Graph == id) 
+                var transactionGraph = _graphSerializer.Deserialize(transaction.Graph);
+                if (transactionGraph.id == id) 
                 {
                     return transaction.Graph;
                 }
             }
         }
-        return "Could not find id";
+        return $"Could not find id {id}";
     }
 }

@@ -8,14 +8,19 @@ namespace Models
         public bool Executed { get; set; }
         public bool Enabled { get; set; }
 
-        public Activity(string title, bool pending, bool included, bool executed)
+        public Activity() {
+            Title = "";
+        }
+
+        public Activity(string title)
         {
             Title = title;
-            Pending = pending;
-            Included = included;
-            Executed = executed;
+            Pending = false;
+            Included = true;
+            Executed = false;
             Enabled = true;
         }
+
 
         public Activity(string title, bool pending) {
             Title = title;
@@ -25,12 +30,12 @@ namespace Models
             Enabled = true;
         }
 
-        public Activity(string title)
+        public Activity(string title, bool pending, bool included, bool executed)
         {
             Title = title;
-            Pending = false;
-            Included = true;
-            Executed = false;
+            Pending = pending;
+            Included = included;
+            Executed = executed;
             Enabled = true;
         }
     }

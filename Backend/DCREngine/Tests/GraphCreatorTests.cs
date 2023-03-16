@@ -51,7 +51,7 @@ public class GraphCreatorTests
 
         Assert.AreEqual(1, graph.Relations.Count);
         Assert.AreEqual(RelationType.CONDITION, graph.Relations[0].Type);
-        Assert.AreEqual("ActivityA", graph.Relations[0].Source.Title);
-        Assert.AreEqual("ActivityB", graph.Relations[0].Target.Title);
+        Assert.AreEqual("ActivityA", graph.Relations[0].Source);
+        Assert.AreEqual("ActivityB", graph.Relations[0].Target);
     }
 }

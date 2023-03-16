@@ -23,7 +23,7 @@ public class GraphSaver
         var reader = new StreamReader(_graphPath);
         var json = reader.ReadToEnd();
         reader.Close();
-        var graph = JsonConvert.DeserializeObject<Graph>(json);
+        var graph = JsonConvert.DeserializeObject<Graph>(json)!;
         return graph;
     }
 }
