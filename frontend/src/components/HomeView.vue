@@ -29,7 +29,7 @@
 
 <script>
 import "./HomeView.scss";
-import blockchainApi from "../services/blockchain.js";
+import axios from "../js/axios.config"
 import TableComponent from "./TableComponent.vue";
 
 export default {
@@ -81,10 +81,15 @@ export default {
 
   methods: {
     async searchGraph() {
-      const graph = await blockchainApi.getGraph(this.searchId);
-      this.activities = graph['activities'];
-      this.relations = graph['relations'];
-      this.isNewGraph = false;
+      await axios.get(`DCR/${this.searchId}`).then(res => {
+        if (res.status == 200) {
+          this.activities = res.data['activities'];
+          this.relations = res.data['relations'];
+          this.isNewGraph = false;
+        }
+      }).catch(err => {
+          console.log(err);
+      })
     },
 
     newGraph() {
