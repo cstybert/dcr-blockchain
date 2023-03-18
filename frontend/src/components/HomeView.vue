@@ -29,6 +29,7 @@
 
 <script>
 import "./HomeView.scss";
+import blockchainApi from "../services/blockchain.js";
 import TableComponent from "./TableComponent.vue";
 
 export default {
@@ -79,8 +80,10 @@ export default {
   },
 
   methods: {
-    searchGraph() {
-      // TODO: Fetch graph from DCR API, set activities and relations
+    async searchGraph() {
+      const graph = await blockchainApi.getGraph(this.searchId);
+      this.activities = graph['activities'];
+      this.relations = graph['relations'];
       this.isNewGraph = false;
     },
 
