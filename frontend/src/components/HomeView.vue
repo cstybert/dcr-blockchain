@@ -2,7 +2,7 @@
   <div class="home-view">
     <h1 class="title"> DCR BlockChain </h1>
     <div class="top-controls">
-      <input type="text" placeholder="Graph ID" v-model="searchId" />
+      <input class="search-input" type="text" placeholder="Graph ID" v-model="searchId" />
       <div class="button-container">
         <button class="submit-button" :disabled="searchId == ''" @click="searchGraph"> Find graph </button>
         or
