@@ -1,0 +1,51 @@
+.home-view {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #15202b;
+
+  .title {
+      width: 75%;
+      margin: 1rem;
+      text-align: center;
+  }
+
+  .top-controls {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .search-input {
+      min-width: 250px;
+    }
+
+    .button-container {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+    }
+  }
+
+  .submit-button {
+    margin: 0.5rem;
+  }
+
+  .tables-container {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+
+    .table-container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+}
