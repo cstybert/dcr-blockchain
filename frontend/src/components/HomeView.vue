@@ -8,22 +8,23 @@
         or
         <button class="submit-button" @click="newGraph"> New graph </button>
       </div>
+      <h4> {{ executeMode ? 'You are in execution mode: Press on an activity\'s Executed field to execute it' : 'You are in creation mode: Add activities and relations to your graph, and finish by pressing Create graph' }}</h4>
     </div>
     
     <div class="tables-container">
       <div class="table-container">
         <h2>Activities</h2>
-        <TableComponent :headers="activityHeaders" :data="activities"/>
-        <button class="submit-button" @click="addActivity"> Add activity </button>
+        <TableComponent :headers="activityHeaders" :data="activities" :executeMode="executeMode" @executeActivity="executeActivity"/>
+        <button class="submit-button" :disabled="executeMode" @click="addActivity"> Add activity </button>
       </div>
 
       <div class="table-container">
         <h2>Relations</h2>
-        <TableComponent :headers="relationHeaders" :data="relations" :activityTitles="activityTitles" :relationTypes="relationTypes"/>
-        <button class="submit-button" @click="addRelation"> Add relation </button>
+        <TableComponent :headers="relationHeaders" :data="relations" :activityTitles="activityTitles" :relationTypes="relationTypes" :executeMode="executeMode"/>
+        <button class="submit-button" :disabled="executeMode" @click="addRelation"> Add relation </button>
       </div>
     </div>
-    <button class="submit-button" @click="createGraph" :hidden="!isNewGraph"> Create graph </button>
+    <button class="submit-button" @click="createGraph" :hidden="executeMode"> Create graph </button>
   </div>
 </template>
 
@@ -41,7 +42,7 @@ export default {
   data() {
     return {
       searchId: "",
-      isNewGraph: false,
+      executeMode: false,
       activityHeaders: [
         {title: "Title", type: "text"},
         {title: "Pending", type: "checkbox"},
@@ -85,17 +86,17 @@ export default {
         if (res.status == 200) {
           this.activities = res.data['activities'];
           this.relations = res.data['relations'];
-          this.isNewGraph = false;
+          this.executeMode = true;
         }
       }).catch(err => {
           console.log(err);
-      })
+      });
     },
 
     newGraph() {
       this.activities = [{ title: "", pending: false, included: true, executed: false, enabled: true }];
       this.relations = [{ source: "", type: null, target: "" }];
-      this.isNewGraph = true;
+      this.executeMode = false;
     },
 
     addActivity() {
@@ -108,6 +109,18 @@ export default {
 
     createGraph() {
       // TODO: Wrap activities and relations in (graph) object and POST to DCR API
+    },
+
+    async executeActivity(title) {
+      const payload = {'actor': "1", 'executingActivity': title};
+      await axios.put(`DCR/update/${this.searchId}`, payload).then(res => {
+        if (res.status == 200) {
+          this.activities = res.data['activities'];
+          this.relations = res.data['relations'];
+        }
+      }).catch(err => {
+          console.log(err);
+      });
     }
   }
 }
