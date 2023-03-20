@@ -111,7 +111,8 @@ export default {
       const payload = {"Actor": "Foo", "Activities": this.activities, "Relations": this.relations};
       await axios.post(`DCR/create`, payload).then(res => {
         if (res.status == 200) {
-          console.log(res.data)
+          this.searchId = res.data['id'];
+          this.executeMode = true;
         }
       }).catch(err => {
           console.log(err);
