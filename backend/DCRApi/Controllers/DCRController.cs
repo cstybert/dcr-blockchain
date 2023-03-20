@@ -45,13 +45,12 @@ public class DCRController : ControllerBase
     }
     
     [HttpPost("create")]
-    public IActionResult Post(CreateGraph req)
+    public IActionResult Post([FromBody] CreateGraph req)
     {
-        _logger.LogTrace("Adding graph to blockchain");
-
-        var graph = _graphCreator.Create(req.Graph.Activities, req.Graph.Relations);
-        var tx = new Transaction(req.Actor, Action.Create, graph);
-        _blockchain.AddBlock(tx);
+        _logger.LogTrace($"Adding graph to blockchain : {req}");
+        Graph graph = _graphCreator.Create(req.Activities, req.Relations);
+        Transaction tx = new Transaction(req.Actor, Action.Create, graph);
+        _blockchain.AddBlock(tx);   
         
         Console.WriteLine($"Block validity: {_blockchain.IsValid()}");
         _logger.LogTrace($"Added graph {graph.ID}");
