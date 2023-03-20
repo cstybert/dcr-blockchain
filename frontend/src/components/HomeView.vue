@@ -107,8 +107,15 @@ export default {
       this.relations.push({ source: "", type: null, target: "" });
     },
 
-    createGraph() {
-      // TODO: Wrap activities and relations in (graph) object and POST to DCR API
+    async createGraph() {
+      const payload = {"Actor": "Foo", "Activities": this.activities, "Relations": this.relations};
+      await axios.post(`DCR/create`, payload).then(res => {
+        if (res.status == 200) {
+          console.log(res.data)
+        }
+      }).catch(err => {
+          console.log(err);
+      });
     },
 
     async executeActivity(title) {
