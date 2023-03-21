@@ -41,6 +41,7 @@ public class DCRController : ControllerBase
     public IActionResult Get(string id)
     {
         _logger.LogTrace($"Fetching graph {id}");
+        Console.WriteLine($"Block validity: {_blockchain.IsValid()}");
         return Ok(_blockchain.GetGraph(id));
     }
     
@@ -61,11 +62,13 @@ public class DCRController : ControllerBase
     public IActionResult Put(string id, ExecuteActivity req)
     {
         _logger.LogTrace($"Executing activity {req.ExecutingActivity} in graph {id}");
-        var graph = _blockchain.GetGraph(id);
-        var updatedGraph = _graphExecutor.Execute(graph, req.ExecutingActivity);
-        var transaction = new Transaction(req.Actor, Action.Update, updatedGraph);
+        Graph graph = _blockchain.GetGraph(id);
+        string graphjson = JsonConvert.SerializeObject(graph);
+        Graph graph_passbyvalue = JsonConvert.DeserializeObject<Graph>(graphjson)!;
+        Graph updatedGraph = _graphExecutor.Execute(graph_passbyvalue, req.ExecutingActivity);
+        Transaction transaction = new Transaction(req.Actor, Action.Update, updatedGraph);
         _blockchain.AddBlock(transaction);
-
+        Console.WriteLine($"Block validity: {_blockchain.IsValid()}");
         _logger.LogTrace($"Updated graph {graph.ID}");
         return Ok(updatedGraph);
     }
