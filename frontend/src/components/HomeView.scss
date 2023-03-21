@@ -35,10 +35,9 @@
 
   .tables-container {
     height: 100%;
-    width: 100%;
+    width: 75%;
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    flex-direction: row;
     justify-content: space-around;
 
     .table-container {
