@@ -9,6 +9,7 @@
         <button class="submit-button" @click="newGraph"> New graph </button>
       </div>
       <h4> {{ executeMode ? 'You are in execution mode: Press on an activity\'s Executed field to execute it' : 'You are in creation mode: Add activities and relations to your graph, and finish by pressing Create graph' }}</h4>
+      <h4 v-if="executeMode">The current graph {{ isAccepting ? 'accepting' : 'not accepting' }}</h4>
     </div>
     
     <div class="tables-container">
@@ -43,6 +44,7 @@ export default {
     return {
       searchId: "",
       executeMode: false,
+      isAccepting: false,
       activityHeaders: [
         {title: "Title", type: "text"},
         {title: "Pending", type: "checkbox"},
@@ -50,26 +52,29 @@ export default {
         {title: "Executed", type: "checkbox"},
         {title: "Enabled", type: "checkbox"}],
       activities: [
-        { title: "A", pending: true, included: true, executed: false, enabled: true },
-        { title: "B", pending: true, included: false, executed: false, enabled: false },
-        { title: "C", pending: false, included: true, executed: false, enabled: true},
-        { title: "D", pending: false, included: true, executed: false, enabled: true },
+        { title: "Select papers", pending: true, included: true, executed: false, enabled: true },
+        { title: "Write introduction", pending: true, included: true, executed: false, enabled: false },
+        { title: "Write abstract", pending: true, included: true, executed: false, enabled: false},
+        { title: "Write conclusion", pending: true, included: true, executed: false, enabled: false },
       ],
       relationHeaders: [
         {title: "Source", type: "select activity"},
         {title: "Type", type: "select relation"},
         {title: "Target", type: "select activity"}
       ],
+      relations: [
+        { source: "Select papers", type: 2, target: "Select papers" },
+        { source: "Select papers", type: 0, target: "Write introduction" },
+        { source: "Select papers", type: 0, target: "Write abstract" },
+        { source: "Select papers", type: 0, target: "Write conclusion" },
+        { source: "Write introduction", type: 1, target: "Write abstract" },
+        { source: "Write conclusion", type: 1, target: "Write abstract" },
+      ],
       relationTypes: [
         {id: 0, text: '-->* (condition)'},
         {id: 1, text: '*--> (response)'},
         {id: 2, text: '-->% (excludes)'},
         {id: 3, text: '-->+ (includes)'},
-      ],
-      relations: [
-        { source: "A", type: 0, target: "B" },
-        { source: "B", type: 1, target: "C" },
-        { source: "C", type: 2, target: "D" },
       ],
     }
   },
@@ -86,6 +91,7 @@ export default {
         if (res.status == 200) {
           this.activities = res.data['activities'];
           this.relations = res.data['relations'];
+          this.isAccepting = res.data['accepting'];
           this.executeMode = true;
         }
       }).catch(err => {
@@ -112,6 +118,7 @@ export default {
       await axios.post(`DCR/create`, payload).then(res => {
         if (res.status == 200) {
           this.searchId = res.data['id'];
+          this.isAccepting = res.data['accepting'];
           this.executeMode = true;
         }
       }).catch(err => {
@@ -125,6 +132,7 @@ export default {
         if (res.status == 200) {
           this.activities = res.data['activities'];
           this.relations = res.data['relations'];
+          this.isAccepting = res.data['accepting'];
         }
       }).catch(err => {
           console.log(err);

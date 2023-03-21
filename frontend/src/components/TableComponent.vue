@@ -20,8 +20,10 @@
             <!-- Boolean fields (e.g. Pending) -->
             <input v-else-if="type == 'checkbox'"
               type="checkbox"
-              :disabled="(executeMode && title != 'Executed') ||
-                         (executeMode && title == 'Executed' && row[title.toLowerCase()])"
+              :disabled="executeMode &&
+                         (!row['enabled'] ||
+                          title != 'Executed' ||
+                          title == 'Executed' && (row['executed'] && !row['pending']))"
               @click="executeMode ? executeActivity(row['title']) : null"
               v-model="row[title.toLowerCase()]" />
             
