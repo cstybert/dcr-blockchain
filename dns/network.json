@@ -1,0 +1,10 @@
+[
+    {
+      "address": "localhost",
+      "port": 4300
+    },
+    {
+      "address": "localhost",
+      "port": 4301
+    }
+]
