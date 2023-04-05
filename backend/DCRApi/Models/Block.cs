@@ -1,3 +1,4 @@
+using System.Reflection.Emit;
 using System.Text;
 using System.Security.Cryptography;
 using Newtonsoft.Json;
@@ -11,6 +12,7 @@ public class Block
     public string Hash {get; private set;}
     public int Nonce {get; private set;}
     private List<Transaction> _transactions;
+    public int Index {get; init;}
 
     public Block(List<Transaction> transactions) 
     {
@@ -51,12 +53,16 @@ public class Block
         return Convert.ToBase64String(hash);
     }
     
-    public void Mine(int difficulty)
+    public void Mine(int difficulty, CancellationToken stoppingToken)
     {
         Hash = GetHash();
         string leadingzeroes = new string('0', difficulty);
-        while (Hash.Substring(0, difficulty) != leadingzeroes) 
+        while ((Hash.Substring(0, difficulty) != leadingzeroes)) 
         {
+            if(stoppingToken.IsCancellationRequested)
+            {
+                return;
+            }
             Nonce++;
             Hash = GetHash();
         }
