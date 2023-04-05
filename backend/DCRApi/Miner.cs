@@ -80,10 +80,18 @@ public class Miner : BackgroundService
     {
         throw new NotImplementedException();
     }
-    private void ResyncLarger(string Address, Block RemoteHead) // figure out better name
-    {
     // Step 1  : If remote block is valid and has index = local head index + 1, and previoushash equal to local head
     //           cancel local mining task , add the remote block, and share the new local head.
+    // Step 2  : Else if remote block is valid: save current length of blockchain in a variable "LocalChainLength"
+    // Step 3  : Check if previousHash on remote equals hash of a block in local chain.
+    //           If not, request the previous block from remote and continue to check if previoushash equals a 
+    //           hash in local chain. Continue until a match is found or all blocks have been requested,
+    //           compare the length of replacing local chain with the remote from the matching hash onwards with "local_chain_length"
+    //           if the length of replacing is longer, cancel mining task and do it. Else dont.
+    //           Call ShareBlock() with new head. 
+    //           If an invalid block is encountered at any time, the process should be aborted.
+    private void ResyncLarger(string Address, Block RemoteHead) // figure out better name
+    {
         if (!RemoteHead.IsValid(Blockchain.Difficulty))
         {
             return;
@@ -93,17 +101,11 @@ public class Miner : BackgroundService
         {
             miningCTSource.Cancel();
             Blockchain.Append(RemoteHead);
+            ShareBlock(RemoteHead);
             return;
         }
-    // Step 2  : Else if remote block is valid: save current length of blockchain in a variable "LocalChainLength"
+
         int LocalChainLength = Blockchain.Chain.Count();
-    // Step 3  : Check if previousHash on remote equals hash of a block in local chain.
-    //           If not, request the previous block from remote and continue to check if previoushash equals a 
-    //           hash in local chain. Continue until a match is found or all blocks have been requested,
-    //           compare the length of replacing local chain with the remote from the matching hash onwards with "local_chain_length"
-    //           if the length of replacing is longer, cancel mining task and do it. Else dont.
-    //           Call ShareBlock() with new head. 
-    //           If an invalid block is encountered at any time, the process should be aborted.
         BlockChain RemoteChain = new BlockChain(Blockchain.Difficulty);
         RemoteChain.Append(RemoteHead);
         for (int i = RemoteHead.Index; i >= 0; i--)
@@ -127,23 +129,27 @@ public class Miner : BackgroundService
             }
             miningCTSource.Cancel();
             // Delete all blocks from the Index of PreviousBlockHash + 1 and to the end of the chain
-            Blockchain.Chain.RemoveRange(IndexOfPreviousHash + 1, Blockchain.Chain.Count() - IndexOfPreviousHash + 1);
-            
+            Blockchain.RemoveRange(IndexOfPreviousHash + 1, Blockchain.Chain.Count() - IndexOfPreviousHash + 1);
+            Blockchain.Append(RemoteChain.Chain);
+            ShareBlock(Blockchain.GetHead());
         }
     }
 
+    // Ask neighbor for entire blockchain
     private void GetBlockchain()
     {
         throw new NotImplementedException();
-        // Ask neighbor for entire blockchain
     }
 
+    // Send newly mined block to all neighbours
     private void ShareBlock(Block block)
     {
         throw new NotImplementedException();
-        // Send newly mined block to all neighbours
     }
 
+    // Step 1  : If block has same index or lower than local head, ignore it.
+    // Step 2  : Check if block is valid and ignore if not.
+    // Step 3  : call ResyncLarger()
     private void ReceiveBlock(string sender, Block block)
     {
         throw new NotImplementedException();
@@ -156,10 +162,6 @@ public class Miner : BackgroundService
             return;
         }
         ResyncLarger(sender, block);
-        // Step 1  : If block has same index or lower than local head, ignore it.
-        // Step 2  : Check if block is valid and ignore if not.
-        // Step 3  : call ResyncLarger()
-
     }
 
     // ------------------------------------------------------------------------------------------------------------
