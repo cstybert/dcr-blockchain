@@ -1,7 +1,9 @@
 using DCR;
 
 var builder = WebApplication.CreateBuilder(args);
-var Configuration = builder.Configuration;
+var configuration = builder.Configuration;
+
+builder.Services.Configure<MinerSettings>(configuration.GetSection(nameof(MinerSettings)));
 
 builder.Services.AddControllers();
 //builder.Services.AddControllers().AddNewtonsoftJson();
