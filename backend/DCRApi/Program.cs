@@ -1,3 +1,5 @@
+using DCR;
+
 var builder = WebApplication.CreateBuilder(args);
 var Configuration = builder.Configuration;
 
@@ -7,10 +9,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 //builder.Services.AddSwaggerGen();
 
+builder.Services.AddSingleton<Miner>();
+builder.Services.AddHostedService<Miner>(s => s.GetRequiredService<Miner>());
+// builder.Services.AddSingleton<IHostedService, Node>();
 var app = builder.Build();
 //app.UseSwagger();
 
-app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
