@@ -14,7 +14,6 @@ public class BlockChain
         _chain = new List<Block>();
         _chainSerializer = new BlockChainSerializer();
         _graphSerializer = new GraphSerializer();
-        Initialize();
     }
 
     [JsonConstructor]
@@ -26,12 +25,13 @@ public class BlockChain
         _graphSerializer = new GraphSerializer();
     }
 
-    private void Initialize() 
+    public void Initialize(CancellationToken stoppingToken) 
     {
-        Block genesis = new Block(new List<Transaction>());
+        Block genesis = new Block(new List<Transaction>()) {Index = 0};
         genesis.PreviousBlockHash = "genesis";
-        genesis.Mine(_difficulty);
+        genesis.Mine(_difficulty, stoppingToken);
         _chain.Add(genesis);
+        Save();
     }
 
     public List<Block> Chain 
@@ -72,18 +72,20 @@ public class BlockChain
              && (_chain[i].Hash == _chain[i].GetHash());
     }
 
-    public void AddBlock(Transaction transaction) 
+    public void AddBlock(List<Transaction> tx, CancellationToken stoppingToken) 
     {
-        var block = new Block(new List<Transaction>{transaction});
-        AddBlock(block);
-    }
-
-    public void AddBlock(Block block) 
-    {
+        Block block = new Block(tx) {Index = _chain.Count};
         block.PreviousBlockHash = GetHead().Hash;
-        block.Mine(Difficulty);
-        _chain.Add(block);
-        Save();
+        block.Mine(Difficulty, stoppingToken);
+        if (!stoppingToken.IsCancellationRequested)
+        {
+            _chain.Add(block);
+            Save();
+        }
+        if (stoppingToken.IsCancellationRequested)
+        {
+            Console.WriteLine("Intial cancel");
+        }
     }
 
     public Block GetHead()
@@ -91,7 +93,7 @@ public class BlockChain
         return _chain[_chain.Count - 1];
     }
 
-    public Graph GetGraph(string id) 
+    public Graph? GetGraph(string id) 
     {
         foreach (Block block in Enumerable.Reverse(_chain))
         {
