@@ -7,7 +7,7 @@ public class Miner : BackgroundService
     private readonly ConcurrentQueue<Transaction> _queue = new ConcurrentQueue<Transaction>();
     public BlockChain Blockchain {get; init;}
     private readonly BlockChainSerializer _blockChainSerializer = new BlockChainSerializer();
-    CancellationTokenSource miningCTSource = new CancellationTokenSource();
+    private CancellationTokenSource miningCTSource = new CancellationTokenSource();
 
     public Miner(ILogger<Miner> logger)
     {
@@ -109,7 +109,7 @@ public class Miner : BackgroundService
             Task task = new Task(new System.Action(Mine));
             task.Start();
             await task;
-            Thread.Sleep(5000);
+            Thread.Sleep(15000); // For testing, a block is added every 15 seconds
         }
     }
 
@@ -120,7 +120,7 @@ public class Miner : BackgroundService
 
     private void Mine()
     {
-        CancellationToken mineCT = miningCTSource.Token;
+        CancellationToken miningCT = miningCTSource.Token;
         List<Transaction> txs = new List<Transaction>();
         Transaction? transaction;
         for (int i = 0; i < 10; i++) // Blocks contain 10 transactions
@@ -135,17 +135,17 @@ public class Miner : BackgroundService
                 txs.Add(transaction);
             }
         }
-        Blockchain.AddBlock(txs, mineCT);
-        if (!mineCT.IsCancellationRequested)
+        Blockchain.AddBlock(txs, miningCT);
+        if (!miningCT.IsCancellationRequested)
         {
             Console.WriteLine("Should share");
+            // Shareblock
         }
-        if (mineCT.IsCancellationRequested)
+        if (miningCT.IsCancellationRequested)
         {
             Console.WriteLine("Cancellation was requested");
-            miningCTSource.TryReset();
+            miningCTSource = new CancellationTokenSource();
         }
-        // if task is not cancelled call ShareBlock();
     }
     public void AddTransaction(Transaction tx)
     {

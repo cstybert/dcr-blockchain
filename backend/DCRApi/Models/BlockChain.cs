@@ -82,10 +82,6 @@ public class BlockChain
             _chain.Add(block);
             Save();
         }
-        if (stoppingToken.IsCancellationRequested)
-        {
-            Console.WriteLine("Intial cancel");
-        }
     }
 
     public Block GetHead()

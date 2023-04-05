@@ -17,9 +17,9 @@ public class DCRController : ControllerBase
     private readonly GraphCreator _graphCreator = new GraphCreator();
     private readonly GraphExecutor _graphExecutor = new GraphExecutor();
 
-    public DCRController(ILogger<DCRController> logger, Miner node)
+    public DCRController(ILogger<DCRController> logger, Miner miner)
     {
-        _miner = node;
+        _miner = miner;
         _logger = logger;
     }
 
