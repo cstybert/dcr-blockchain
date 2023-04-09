@@ -1,27 +1,27 @@
 using Newtonsoft.Json;
 using Models;
 namespace DCR;
-public class BlockChain
+public class Blockchain
 {
     private List<Block> _chain;
     private int _difficulty;
-    private BlockChainSerializer _chainSerializer;
+    private BlockchainSerializer _chainSerializer;
     private GraphSerializer _graphSerializer;
 
-    public BlockChain(int difficulty) 
+    public Blockchain(int difficulty) 
     {
         _difficulty = difficulty;
         _chain = new List<Block>();
-        _chainSerializer = new BlockChainSerializer();
+        _chainSerializer = new BlockchainSerializer();
         _graphSerializer = new GraphSerializer();
     }
 
     [JsonConstructor]
-    private BlockChain(List<Block> chain, int difficulty)
+    private Blockchain(List<Block> chain, int difficulty)
     {
         _chain = chain;
         _difficulty = difficulty;
-        _chainSerializer = new BlockChainSerializer();
+        _chainSerializer = new BlockchainSerializer();
         _graphSerializer = new GraphSerializer();
     }
 

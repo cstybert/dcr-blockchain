@@ -1,6 +1,6 @@
 <template>
   <div class="home-view">
-    <h1 class="title"> DCR BlockChain </h1>
+    <h1 class="title"> DCR Blockchain </h1>
     <div class="top-controls">
       <input class="search-input" type="text" placeholder="Graph ID" v-model="searchId" />
       <div class="button-container">
