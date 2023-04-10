@@ -3,12 +3,12 @@ using Newtonsoft.Json;
 namespace DCR;
 public class NetworkSerializer
 {
-    public string Serialize(Node node)
+    public string Serialize(NetworkNode node)
     {
         return JsonConvert.SerializeObject(node, Formatting.Indented);
     }
 
-    public string Serialize(List<Node> nodes)
+    public string Serialize(List<NetworkNode> nodes)
     {
         return JsonConvert.SerializeObject(nodes, Formatting.Indented);
     }
@@ -18,8 +18,13 @@ public class NetworkSerializer
         return JsonConvert.SerializeObject(connectNode, Formatting.Indented);
     }
 
-    public List<Node> Deserialize(string json)
+    public string Serialize(ShareBlock shareBlock)
     {
-        return JsonConvert.DeserializeObject<List<Node>>(json)!;
+        return JsonConvert.SerializeObject(shareBlock, Formatting.Indented);
+    }
+
+    public List<NetworkNode> Deserialize(string json)
+    {
+        return JsonConvert.DeserializeObject<List<NetworkNode>>(json)!;
     }
 }

@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-
+using Newtonsoft.Json;
 
 namespace DCR;
 [ApiController]
@@ -9,13 +9,13 @@ public class BlockchainController : ControllerBase
 
     private readonly ILogger<BlockchainController> _logger;
     private readonly NetworkClient _networkClient;
-    private readonly Miner _miner;
+    private readonly AbstractNode _node;
     private readonly BlockchainSerializer _blockchainSerializer;
 
-    public BlockchainController(ILogger<BlockchainController> logger, NetworkClient networkClient, Miner miner)
+    public BlockchainController(ILogger<BlockchainController> logger, NetworkClient networkClient, AbstractNode node)
     {
         _logger = logger;
-        _miner = miner;
+        _node = node;
         _networkClient = networkClient;
         _blockchainSerializer = new BlockchainSerializer();
     }
@@ -23,21 +23,43 @@ public class BlockchainController : ControllerBase
     [HttpGet("full")]
     public IActionResult GetBlockchain()
     {
-        return Ok(_miner.Blockchain.Chain);
+        string blockchainJson = _blockchainSerializer.Serialize(_node.Blockchain);
+        return Ok(blockchainJson);
     }
 
     [HttpGet("head")]
     public IActionResult GetHeadBlock()
     {
-        return Ok(_miner.Blockchain.GetHead());
+        return Ok(_blockchainSerializer.Serialize(_node.Blockchain.GetHead()));
+    }
+    [HttpGet("{index}")]
+    public IActionResult GetBlock(int index)
+    {
+        try 
+        {
+            return Ok(_blockchainSerializer.Serialize(_node.Blockchain.Chain[index]));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return NotFound("Could not find block");
+        }
     }
 
     [HttpPost("block")]
-    public IActionResult ReceiveBlock(Block receivedBlock)
+    public IActionResult ReceiveBlock(ShareBlock req)
     {
-        Console.WriteLine($"Received block {receivedBlock.Hash}");
-        _miner.ReceiveBlock(receivedBlock);
+        string blockJson = JsonConvert.SerializeObject(req.Block);
+        _node.ReceiveBlock(req);
 
+        return Ok();
+    }
+
+    [HttpPost("transaction")]
+    public IActionResult ReceiveTransaction(Transaction transaction)
+    {
+        Console.WriteLine($"Received Transaction {transaction.Id}");
+        _node.HandleTransaction(transaction);
         return Ok();
     }
 }

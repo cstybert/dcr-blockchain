@@ -19,11 +19,11 @@ public class NetworkController : ControllerBase
     }
 
     [HttpPost("connect")]
-    public IActionResult Connect([FromBody] ConnectNode req)
+    public async Task<IActionResult> Connect([FromBody] ConnectNode req)
     {
         _logger.LogTrace($"Received connect request: {req}");
         var clientNeighbors = DeepCopyNodes(_networkClient.ClientNeighbors);
-        _networkClient.ConnectToPeerNetwork(req.Node);
+        await _networkClient.ConnectToPeerNetwork(req.Node);
 
         return Ok(clientNeighbors);
     }
@@ -38,7 +38,7 @@ public class NetworkController : ControllerBase
         return Ok();
     }
 
-    private List<Node> DeepCopyNodes(List<Node> nodes)
+    private List<NetworkNode> DeepCopyNodes(List<NetworkNode> nodes)
     {
         return _networkSerializer.Deserialize(_networkSerializer.Serialize(nodes));
     }

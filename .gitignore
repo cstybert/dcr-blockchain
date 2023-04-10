@@ -5,7 +5,7 @@
 project.lock.json
 .DS_Store
 *.pyc
-
+blockchain*.json
 # Visual Studio Code
 .vscode
 
