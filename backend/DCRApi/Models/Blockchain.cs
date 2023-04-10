@@ -79,15 +79,9 @@ public class Blockchain
         block.Mine(Difficulty, stoppingToken);
         if (!stoppingToken.IsCancellationRequested)
         {
-            AddBlock(block);
+            Append(block);
         }
         return block;
-    }
-
-    public void AddBlock(Block block)
-    {
-        _chain.Add(block);
-        Save();
     }
 
     public void RemoveRange(int index, int count)

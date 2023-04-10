@@ -219,10 +219,10 @@ public class Miner : BackgroundService
                 txs.Add(transaction);
             }
         }
-        var addedBlock = Blockchain.MineTransactions(txs, mineCT);
+        var newBlock = Blockchain.MineTransactions(txs, mineCT);
         if (!mineCT.IsCancellationRequested)
         {
-            ShareBlock(addedBlock);
+            ShareBlock(newBlock);
         }
         if (mineCT.IsCancellationRequested)
         {
