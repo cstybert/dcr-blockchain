@@ -31,12 +31,25 @@ public class BlockchainController : ControllerBase
     {
         return Ok(_miner.Blockchain.GetHead());
     }
+    [HttpGet("{index}")]
+    public IActionResult GetHeadBlock(int index)
+    {
+        try 
+        {
+            return Ok(_miner.Blockchain.Chain[index]);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return NotFound("Could not find block");
+        }
+    }
 
     [HttpPost("block")]
-    public IActionResult ReceiveBlock(Block receivedBlock)
+    public IActionResult ReceiveBlock(ShareBlock req)
     {
-        Console.WriteLine($"Received block {receivedBlock.Hash}");
-        _miner.ReceiveBlock(receivedBlock);
+        Console.WriteLine($"Received block {req.Block.Hash}");
+        _miner.ReceiveBlock(req);
 
         return Ok();
     }
