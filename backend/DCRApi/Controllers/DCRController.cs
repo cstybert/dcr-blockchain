@@ -51,7 +51,7 @@ public class DCRController : ControllerBase
         _logger.LogInformation($"Adding graph to blockchain : {req}");
         Graph graph = _graphCreator.Create(req.Activities, req.Relations);
         Transaction tx = new Transaction(req.Actor, Action.Create, graph);
-        _miner.AddTransaction(tx);
+        _miner.HandleTransaction(tx);
         _logger.LogInformation($"Block validity: {_miner.Blockchain.IsValid()}");
         _logger.LogInformation($"Created Transaction");
         return Ok("Transaction added");
@@ -67,7 +67,7 @@ public class DCRController : ControllerBase
             return NotFound("Could not find graph");
         }
         Transaction tx = CreateUpdateGraphTransaction(graph, req.Actor, req.ExecutingActivity);
-        _miner.AddTransaction(tx);
+        _miner.HandleTransaction(tx);
         _logger.LogInformation($"Block validity: {_miner.Blockchain.IsValid()}");
         _logger.LogInformation($"Updated graph {graph.ID}");
         return Ok("Transaction added");

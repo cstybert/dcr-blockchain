@@ -23,10 +23,17 @@ public class Miner : AbstractNode
         // by below comment:
         if (!System.IO.File.Exists("blockchain.json"))
         {
-            Blockchain? blockchain = NetworkClient.GetBlockchain();
+            Blockchain? blockchain = NetworkClient.GetBlockchain().Result;
             CancellationToken mineCT = miningCTSource.Token;
-            Blockchain = new Blockchain(_settings.Difficulty);
-            Blockchain.Initialize(mineCT);
+            if (blockchain is not null)
+            {
+                Blockchain = blockchain;
+            }
+            else
+            {
+                Blockchain = new Blockchain(_settings.Difficulty);
+                Blockchain.Initialize(mineCT);
+            }
         }
         else
         {
@@ -34,13 +41,6 @@ public class Miner : AbstractNode
             Blockchain = _blockchainSerializer.Deserialize(blockJson);
             ResyncBlockchain(_settings.NumberNeighbours);
         }
-
-        // REPLACE WITH THIS
-        // if (System.IO.File.Exists("blockchain.json"))
-        // {
-        //     string blockJson = System.IO.File.ReadAllText("blockchain.json");
-        //     Blockchain = _blockchainSerializer.Deserialize(blockJson);
-        // }
     }
 
     public override async Task StartAsync(CancellationToken stoppingToken)
@@ -79,7 +79,7 @@ public class Miner : AbstractNode
         List<Transaction> txs = new List<Transaction>();
         Transaction? transaction;
         int i = 0;
-        while (i < _settings.SizeOfBlocks) // Blocks contain 10 transactions
+        while (i < _settings.SizeOfBlocks)
         {
             _queue.TryDequeue(out transaction);
             if (transaction is null)
@@ -106,7 +106,7 @@ public class Miner : AbstractNode
             miningCTSource = new CancellationTokenSource();
         }
     }
-    public void AddTransaction(Transaction tx)
+    public override void HandleTransaction(Transaction tx)
     {
         if (!_queue.Any(t => t.Id == tx.Id))
         {

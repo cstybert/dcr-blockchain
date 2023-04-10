@@ -93,6 +93,10 @@ public class NetworkClient : IDisposable
     // Get Blockchain from random neighbour
     public async Task<Blockchain?> GetBlockchain()
     {
+            if (ClientNeighbors.Count == 0)
+            {
+                return null;
+            }
             Blockchain blockchain;
             int i = 0;
             while (i < 5) {   
@@ -120,6 +124,10 @@ public class NetworkClient : IDisposable
     // Get Blockchain from random neighbour
     public async Task<GetHeadResponse?> GetHeadFromNeighbour()
     {
+            if (ClientNeighbors.Count == 0)
+            {
+                return null;
+            }
             Block head;
             int i = 0;
             while (i < 5) {   

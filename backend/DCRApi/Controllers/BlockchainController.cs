@@ -32,7 +32,7 @@ public class BlockchainController : ControllerBase
         return Ok(_miner.Blockchain.GetHead());
     }
     [HttpGet("{index}")]
-    public IActionResult GetHeadBlock(int index)
+    public IActionResult GetBlock(int index)
     {
         try 
         {
@@ -58,7 +58,7 @@ public class BlockchainController : ControllerBase
     public IActionResult ReceiveTransaction(Transaction transaction)
     {
         Console.WriteLine($"Received Transaction {transaction.Id}");
-        _miner.AddTransaction(transaction);
+        _miner.HandleTransaction(transaction);
         return Ok();
     }
 }
