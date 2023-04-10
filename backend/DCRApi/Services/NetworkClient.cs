@@ -8,6 +8,8 @@ public class NetworkClient : IDisposable
     private HttpClient _httpClient;
     public NetworkNode ClientNode {get;}
     public List<NetworkNode> ClientNeighbors {get;}
+    private readonly BlockchainSerializer _blockchainSerializer = new BlockchainSerializer();
+    private readonly BlockSerializer _blockSerializer = new BlockSerializer();
 
     public NetworkClient(string address, int port)
     {
@@ -88,6 +90,84 @@ public class NetworkClient : IDisposable
         }
     }
 
+    // Get Blockchain from random neighbour
+    public async Task<Blockchain?> GetBlockchain()
+    {
+            if (ClientNeighbors.Count == 0)
+            {
+                return null;
+            }
+            Blockchain blockchain;
+            int i = 0;
+            while (i < 5) {   
+                Random r = new Random();
+                int neighbourIndex = r.Next(0, ClientNeighbors.Count - 1);
+                var neighbour = ClientNeighbors[neighbourIndex];
+                try {
+                    HttpResponseMessage res = await _httpClient.GetAsync($"{neighbour.URL}/blockchain/full");
+                    string responseContent = await res.Content.ReadAsStringAsync();
+                    blockchain = _blockchainSerializer.Deserialize(responseContent);
+                }
+                catch (Exception ex) {
+                    PrintError(ex);
+                    continue;
+                }
+                if (blockchain is not null)
+                {
+                    return blockchain;
+                }
+                i++;
+            }
+            return null;
+    }
+
+    // Get Blockchain from random neighbour
+    public async Task<GetHeadResponse?> GetHeadFromNeighbour()
+    {
+        if (ClientNeighbors.Count == 0)
+        {
+            return null;
+        }
+        Block head;
+        int i = 0;
+        while (i < 5) {   
+            Random r = new Random();
+            int neighbourIndex = r.Next(0, ClientNeighbors.Count - 1);
+            var neighbour = ClientNeighbors[neighbourIndex];
+            try {
+                HttpResponseMessage res = await _httpClient.GetAsync($"{neighbour.URL}/blockchain/head");
+                string responseContent = await res.Content.ReadAsStringAsync();
+                head = _blockSerializer.Deserialize(responseContent);
+            }
+            catch (Exception ex) {
+                PrintError(ex);
+                continue;
+            }
+            if (head is not null)
+            {
+                return new GetHeadResponse(head, neighbour);
+            }
+            i++;
+        }
+        return null;
+    }
+
+    // Get Blockchain from random neighbour
+    public async Task<Block?> GetBlock(NetworkNode neighbour, int index)
+    {
+            Block block;
+            try {
+                HttpResponseMessage res = await _httpClient.GetAsync($"{neighbour.URL}/blockchain/{index}");
+                string responseContent = await res.Content.ReadAsStringAsync();
+                block = _blockSerializer.Deserialize(responseContent);
+            }
+            catch (Exception ex) {
+                PrintError(ex);
+                return null;
+            }
+            return block;
+    }
+
     private async Task DisconnectFromNode(NetworkNode node) {
         var content = GetConnectionContent();
         try {
@@ -99,8 +179,10 @@ public class NetworkClient : IDisposable
         }
     }
 
-    public void BroadcastBlock(string blockJson) {
-        var content = new StringContent(blockJson, Encoding.UTF8, "application/json");
+    public void BroadcastBlock(Block block) {
+        var connectNode = new ShareBlock(block, ClientNode);
+        var shareJson = _networkSerializer.Serialize(connectNode);
+        var content = new StringContent(shareJson, Encoding.UTF8, "application/json");
         foreach (var neighbor in ClientNeighbors) {
             try
             {
