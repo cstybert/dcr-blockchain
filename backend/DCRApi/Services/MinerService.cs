@@ -19,7 +19,6 @@ public class MinerService : BackgroundService
     }
     public override async Task StopAsync(CancellationToken stoppingToken)
     {
-        _miner.Blockchain.Save();
         await _miner.NetworkClient.DisconnectFromNetwork();
         _logger.LogInformation($"Stopping Node");
         await base.StopAsync(stoppingToken);

@@ -13,26 +13,31 @@ public class FullNode : AbstractNode
         _logger = logger;
         Settings = settings.Value;
         NetworkClient = networkClient;
-        // When we add network we should not create a blockchain.json from scract
-        // but instead ask neighbors for the up to date version, so this should be removed and replaced
-        // by below comment:
-        if (!System.IO.File.Exists("blockchain.json"))
+        Random r = new Random();
+        int name = r.Next();
+        if (!System.IO.File.Exists($"blockchain{Id}.json"))
         {
+            Console.WriteLine("Getting blockchain");
             Blockchain? blockchain = NetworkClient.GetBlockchain().Result;
+            Console.WriteLine("Got blockchain");
             CancellationToken mineCT = miningCTSource.Token;
             if (blockchain is not null)
             {
+                Console.WriteLine("Blockchain was not null");
                 Blockchain = blockchain;
+                Save();
             }
             else
             {
+                Console.WriteLine("Blockchain was null");
                 Blockchain = new Blockchain(Settings.Difficulty);
                 Blockchain.Initialize(mineCT);
+                Save();
             }
         }
         else
         {
-            var blockJson = System.IO.File.ReadAllText("blockchain.json");
+            var blockJson = System.IO.File.ReadAllText($"blockchain{Id}.json");
             Blockchain = _blockchainSerializer.Deserialize(blockJson);
             ResyncBlockchain(Settings.NumberNeighbours);
         }
@@ -41,5 +46,6 @@ public class FullNode : AbstractNode
 
     public override void HandleTransaction(Transaction tx)
     {
+        Console.WriteLine("Handle transaction");
     }
 }

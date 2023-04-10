@@ -17,10 +17,7 @@ public class Miner : AbstractNode
         _logger = logger;
         Settings = settings.Value;
         NetworkClient = networkClient;
-        // When we add network we should not create a blockchain.json from scract
-        // but instead ask neighbors for the up to date version, so this should be removed and replaced
-        // by below comment:
-        if (!System.IO.File.Exists("blockchain.json"))
+        if (!System.IO.File.Exists($"blockchain{Id.ToString()}.json"))
         {
             Blockchain? blockchain = NetworkClient.GetBlockchain().Result;
             CancellationToken mineCT = miningCTSource.Token;
@@ -36,7 +33,7 @@ public class Miner : AbstractNode
         }
         else
         {
-            var blockJson = System.IO.File.ReadAllText("blockchain.json");
+            var blockJson = System.IO.File.ReadAllText($"blockchain{Id.ToString()}.json");
             Blockchain = _blockchainSerializer.Deserialize(blockJson);
             ResyncBlockchain(Settings.NumberNeighbours);
         }
@@ -73,6 +70,7 @@ public class Miner : AbstractNode
         if (!miningCT.IsCancellationRequested)
         {
             ShareBlock(newBlock);
+            Save();
         }
         if (miningCT.IsCancellationRequested)
         {

@@ -31,7 +31,6 @@ public class Blockchain
         genesis.PreviousBlockHash = "genesis";
         genesis.Mine(_difficulty, stoppingToken);
         _chain.Add(genesis);
-        Save();
     }
 
     public List<Block> Chain 
@@ -91,19 +90,16 @@ public class Blockchain
     public void Append(Block block) 
     {
         _chain.Add(block);
-        Save();
     }
 
     public void Append(List<Block> block) 
     {
         _chain.AddRange(block);
-        Save();
     }
 
     public void Prepend(Block block) 
     {
         _chain.Prepend(block);
-        Save();
     }
 
     public Block GetHead()
@@ -124,14 +120,5 @@ public class Blockchain
             }
         }
         return null;
-    }
-
-    public void Save()
-    {
-        var blockchainJson = _chainSerializer.Serialize(this);
-        using (StreamWriter sw = System.IO.File.CreateText("blockchain.json"))
-        {
-            sw.Write(blockchainJson);
-        }
     }
 }

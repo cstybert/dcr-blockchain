@@ -95,6 +95,7 @@ public class NetworkClient : IDisposable
     {
             if (ClientNeighbors.Count == 0)
             {
+                Console.WriteLine("ClientNeighbours was 0");
                 return null;
             }
             Blockchain blockchain;

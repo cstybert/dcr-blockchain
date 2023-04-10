@@ -8,6 +8,7 @@ public abstract class AbstractNode
     // even if it is not used in other node types than miner.
     protected CancellationTokenSource miningCTSource = new CancellationTokenSource();
     public abstract void HandleTransaction(Transaction tx);
+    protected int Id = new Random().Next();
 
     protected async void ResyncBlockchain(int NumberNeighbours)
     {
@@ -30,6 +31,15 @@ public abstract class AbstractNode
         }
     }
 
+    protected void Save()
+    {
+        var blockchainJson = _blockchainSerializer.Serialize(Blockchain);
+        using (StreamWriter sw = System.IO.File.CreateText($"blockchain{Id.ToString()}.json"))
+        {
+            sw.Write(blockchainJson);
+        }
+    }
+
     private async void Resync(NetworkNode Node, Block RemoteHead)
     {
         if (!RemoteHead.IsValid(Blockchain.Difficulty))
@@ -45,6 +55,7 @@ public abstract class AbstractNode
             miningCTSource.Cancel();
             Blockchain.Append(RemoteHead);
             ShareBlock(RemoteHead);
+            Save();
             return;
         }
 
@@ -75,6 +86,7 @@ public abstract class AbstractNode
             Blockchain.RemoveRange(IndexOfPreviousHash + 1, Blockchain.Chain.Count() - IndexOfPreviousHash + 1);
             Blockchain.Append(RemoteChain.Chain);
             ShareBlock(Blockchain.GetHead());
+            Save();
         }
     }
 
