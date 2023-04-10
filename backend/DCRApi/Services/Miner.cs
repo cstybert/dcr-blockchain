@@ -154,7 +154,7 @@ public class Miner : BackgroundService
     // Step 1  : If block has same index or lower than local head, ignore it.
     // Step 2  : Check if block is valid and ignore if not.
     // Step 3  : call ResyncLarger()
-    private void ReceiveBlock(string sender, Block block)
+    public void ReceiveBlock(Block block) // TODO: Add sender parameter?
     {
         throw new NotImplementedException();
         if (block.Index <= Blockchain.GetHead().Index)

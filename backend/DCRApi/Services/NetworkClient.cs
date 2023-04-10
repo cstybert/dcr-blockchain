@@ -64,13 +64,14 @@ public class NetworkClient : IDisposable
     {
         if (AddNode(node)) {
             var peerNeighbors = await ConnectToNode(node);
+            Console.WriteLine($"Connected to node {node.URL}");
             foreach (var neighbor in peerNeighbors) {
                 if (AddNode(neighbor)) {
                     await ConnectToNode(neighbor); // TODO: Connect to neighbor's neighbors?
+                    Console.WriteLine($"Connected to node {neighbor.URL} (neighbor)");
                 }
             }
         }
-        PrintNeighborList();
     }
 
     private async Task<List<Node>> ConnectToNode(Node node) {
@@ -88,10 +89,10 @@ public class NetworkClient : IDisposable
     }
 
     private async Task DisconnectFromNode(Node node) {
-        Console.WriteLine($"Disconnected from {node.URL}");
         var content = GetConnectionContent();
         try {
             await _httpClient.PostAsync($"{node.URL}/network/disconnect", content);
+            Console.WriteLine($"Disconnected from node {node.URL}");
         }
         catch (Exception ex) {
             PrintError(ex);

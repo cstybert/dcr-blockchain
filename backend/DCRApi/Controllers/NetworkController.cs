@@ -33,8 +33,7 @@ public class NetworkController : ControllerBase
     {
         _logger.LogTrace($"Received disconnect request: {req}");
         _networkClient.RemoveNode(req.Node);
-
-        _networkClient.PrintNeighborList();
+        Console.WriteLine($"Disconnected from node {req.Node.URL}");
 
         return Ok();
     }

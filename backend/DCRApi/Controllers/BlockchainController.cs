@@ -36,9 +36,8 @@ public class BlockchainController : ControllerBase
     public IActionResult ReceiveBlock(Block receivedBlock)
     {
         Console.WriteLine($"Received block {receivedBlock.Hash}");
-        if (!(receivedBlock.Index <= _miner.Blockchain.GetHead().Index)) {
-            _miner.Blockchain.AddBlock(receivedBlock);
-        }
+        _miner.ReceiveBlock(receivedBlock);
+
         return Ok();
     }
 }
