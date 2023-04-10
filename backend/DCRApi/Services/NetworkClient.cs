@@ -2,61 +2,40 @@ using System.Text;
 
 namespace DCR;
 
-public class NetworkClient
+public class NetworkClient : IDisposable
 {
     private NetworkSerializer _networkSerializer;
+    private HttpClient _httpClient;
     public Node ClientNode {get;}
     public List<Node> ClientNeighbors {get;}
 
     public NetworkClient(string address, int port)
     {
         _networkSerializer = new NetworkSerializer();
+        _httpClient = new HttpClient();
         ClientNode = new Node(address, port);
         ClientNeighbors = new List<Node>();
     }
 
     public async void DiscoverNetwork()
     {
-        using (var client = new HttpClient())
-        {
-            try
-            {
-                // Query DNS Server
-                Console.WriteLine("Connecting to DNS server...");
-                var dnsResponse = await client.GetAsync("http://localhost:5000/DNS");
-                var jsonString = await dnsResponse.Content.ReadAsStringAsync();
-                var nodes = _networkSerializer.Deserialize(jsonString);
+        // Query DNS Server for seed nodes
+        var seedNodes = await ConnectToDNSServer();
 
-                // Connect to discovered neighbor nodes
-                Console.WriteLine($"Connecting to discovered neighbors...");
-                foreach (var node in nodes) {
-                    ConnectToPeerNetwork(node);
-                }
-
-                Console.WriteLine($"Neighbor List:");
-                foreach (var neighbor in ClientNeighbors) {
-                    Console.WriteLine(neighbor.URL);
-                }
-            }
-            catch (Exception ex)
-            {
-                PrintError(ex);
-            }
+        Console.WriteLine($"Connecting to seed node networks...");
+        foreach (var node in seedNodes) {
+            ConnectToPeerNetwork(node);
         }
     }
 
     public async Task DisconnectFromNetwork()
     {
-        using (var client = new HttpClient())
-        {
+        // Disconnect from all neighbors
+        foreach (var neighbor in ClientNeighbors) {
             try
             {
-                // Disconnect from neighbors
-                foreach (var neighbor in ClientNeighbors) {
-                    // RemoveNode(neighbor);
-                    Console.WriteLine("Disconnecting from "+neighbor.URL);
-                    await DisconnectFromNode(client, neighbor);
-                }
+                // RemoveNode(neighbor); TODO: Is removing neighbor from the list necessary? The list is wiped anyway..
+                await DisconnectFromNode(neighbor);
             }
             catch (Exception ex)
             {
@@ -65,61 +44,70 @@ public class NetworkClient
         }
     }
 
-    public async void ConnectToPeerNetwork(Node node) {
-        if (!AddNode(node)) {
-            Console.WriteLine($"{node.URL} (skipped)");
-            return;
+    private async Task<List<Node>> ConnectToDNSServer()
+    {
+        Console.WriteLine("Connecting to DNS server...");
+        try {
+            var dnsResponse = await _httpClient.GetAsync("http://localhost:5000/DNS"); // TODO: Add retry-functionality?
+            var responseContent = await dnsResponse.Content.ReadAsStringAsync();
+            var seedNodes = _networkSerializer.Deserialize(responseContent);
+            return seedNodes;
         }
-        Console.WriteLine($"{node.URL} (added)");
-
-        using (var client = new HttpClient())
+        catch (Exception ex)
         {
-            try
-            {
-                var peerNeighbors = await ConnectToNode(client, node);
-                foreach (var neighbor in peerNeighbors) {
-                    if (AddNode(neighbor)) {
-                        await ConnectToNode(client, neighbor); // TODO: Ignore neighbor's neighbors?
-                        Console.WriteLine($"{neighbor.URL} (added neighbor)");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                PrintError(ex);
-            }
+            PrintError(ex);
+            return new List<Node>();
         }
     }
 
-    private async Task<List<Node>> ConnectToNode(HttpClient client, Node node) {
-        var connectNode = new ConnectNode(ClientNode, ClientNeighbors);
-        var nodeJson = _networkSerializer.Serialize(connectNode);
-        var content = new StringContent(nodeJson, Encoding.UTF8, "application/json");
-        var peerResponse = await client.PostAsync($"{node.URL}/network/connect", content);
-        var jsonString = await peerResponse.Content.ReadAsStringAsync();
-        var peerNeighbors = _networkSerializer.Deserialize(jsonString);
-        return peerNeighbors;
+    public async void ConnectToPeerNetwork(Node node)
+    {
+        if (AddNode(node)) {
+            var peerNeighbors = await ConnectToNode(node);
+            foreach (var neighbor in peerNeighbors) {
+                if (AddNode(neighbor)) {
+                    await ConnectToNode(neighbor); // TODO: Connect to neighbor's neighbors?
+                }
+            }
+        }
+        PrintNeighborList();
     }
 
-    private async Task DisconnectFromNode(HttpClient client, Node node) {
-        var connectNode = new ConnectNode(ClientNode, ClientNeighbors);
-        var nodeJson = _networkSerializer.Serialize(connectNode);
-        var content = new StringContent(nodeJson, Encoding.UTF8, "application/json");
-        await client.PostAsync($"{node.URL}/network/disconnect", content);
+    private async Task<List<Node>> ConnectToNode(Node node) {
+        var content = GetConnectionContent();
+        try {
+            var peerResponse = await _httpClient.PostAsync($"{node.URL}/network/connect", content);
+            var jsonString = await peerResponse.Content.ReadAsStringAsync();
+            var peerNeighbors = _networkSerializer.Deserialize(jsonString);
+            return peerNeighbors;
+        }
+        catch (Exception ex) {
+            PrintError(ex);
+            return new List<Node>();
+        }
     }
 
-    public async void Broadcast(string json) {
-        using (var client = new HttpClient())
-        {
+    private async Task DisconnectFromNode(Node node) {
+        Console.WriteLine($"Disconnected from {node.URL}");
+        var content = GetConnectionContent();
+        try {
+            await _httpClient.PostAsync($"{node.URL}/network/disconnect", content);
+        }
+        catch (Exception ex) {
+            PrintError(ex);
+        }
+    }
+
+    public async void BroadcastBlock(string blockJson) {
+        var content = new StringContent(blockJson, Encoding.UTF8, "application/json");
+        foreach (var neighbor in ClientNeighbors) {
             try
             {
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-                foreach (var neighbor in ClientNeighbors) {
-                    await client.PostAsync($"{neighbor.URL}/blockchain/block", content);
-                }
+                await _httpClient.PostAsync($"{neighbor.URL}/blockchain/block", content);
             }
             catch (Exception ex)
             {
+                // TODO: Determine if we should remove unreliable neighbor
                 PrintError(ex);
             }
         }
@@ -139,9 +127,31 @@ public class NetworkClient
         ClientNeighbors.RemoveAll(n => n.URL == node.URL);
     }
 
-    private static void PrintError(Exception ex) {
+    public void PrintNeighborList()
+    {
+        Console.WriteLine($"Neighbor List:");
+        foreach (var neighbor in ClientNeighbors) {
+            Console.WriteLine(neighbor.URL);
+        }
+    }
+
+    private static void PrintError(Exception ex)
+    {
         Console.ForegroundColor = ConsoleColor.Red;
         Console.WriteLine(ex.Message);
         Console.ResetColor();
+    }
+
+    private StringContent GetConnectionContent()
+    {
+        var connectNode = new ConnectNode(ClientNode, ClientNeighbors);
+        var nodeJson = _networkSerializer.Serialize(connectNode);
+        var content = new StringContent(nodeJson, Encoding.UTF8, "application/json");
+        return content;
+    }
+
+    // Make sure to timely dispose the HttpClient to avoid waiting for GC
+    public void Dispose() {
+        _httpClient.Dispose();
     }
 }

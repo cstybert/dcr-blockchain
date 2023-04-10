@@ -72,16 +72,22 @@ public class Blockchain
              && (_chain[i].Hash == _chain[i].GetHash());
     }
 
-    public void AddBlock(List<Transaction> tx, CancellationToken stoppingToken) 
+    public Block MineTransactions(List<Transaction> tx, CancellationToken stoppingToken) 
     {
         Block block = new Block(tx) {Index = _chain.Count};
         block.PreviousBlockHash = GetHead().Hash;
         block.Mine(Difficulty, stoppingToken);
         if (!stoppingToken.IsCancellationRequested)
         {
-            _chain.Add(block);
-            Save();
+            AddBlock(block);
         }
+        return block;
+    }
+
+    public void AddBlock(Block block)
+    {
+        _chain.Add(block);
+        Save();
     }
 
     public Block GetHead()
@@ -104,11 +110,12 @@ public class Blockchain
         return null;
     }
 
-    public void Save() {
-        var blockChainJson = _chainSerializer.Serialize(this);
+    public void Save()
+    {
+        var blockchainJson = _chainSerializer.Serialize(this);
         using (StreamWriter sw = System.IO.File.CreateText("blockchain.json"))
         {
-            sw.Write(blockChainJson);
+            sw.Write(blockchainJson);
         }
     }
 }

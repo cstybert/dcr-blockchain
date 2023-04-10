@@ -21,15 +21,9 @@ public class NetworkController : ControllerBase
     [HttpPost("connect")]
     public IActionResult Connect([FromBody] ConnectNode req)
     {
-        Console.WriteLine($"Received connect request: {req.Node.URL}");
         _logger.LogTrace($"Received connect request: {req}");
         var clientNeighbors = DeepCopyNodes(_networkClient.ClientNeighbors);
-        _networkClient.AddNode(req.Node);
-        foreach (var neighbor in req.Neighbors) {
-            _networkClient.ConnectToPeerNetwork(neighbor);
-        }
-
-        PrintNeighborList();
+        _networkClient.ConnectToPeerNetwork(req.Node);
 
         return Ok(clientNeighbors);
     }
@@ -37,11 +31,10 @@ public class NetworkController : ControllerBase
     [HttpPost("disconnect")]
     public IActionResult Disconnect([FromBody] ConnectNode req)
     {
-        Console.WriteLine($"Received disconnect request: {req.Node.URL}");
         _logger.LogTrace($"Received disconnect request: {req}");
         _networkClient.RemoveNode(req.Node);
 
-        PrintNeighborList();
+        _networkClient.PrintNeighborList();
 
         return Ok();
     }
@@ -49,12 +42,5 @@ public class NetworkController : ControllerBase
     private List<Node> DeepCopyNodes(List<Node> nodes)
     {
         return _networkSerializer.Deserialize(_networkSerializer.Serialize(nodes));
-    }
-
-    private void PrintNeighborList() {
-        Console.WriteLine($"Updated Neighbor List:");
-        foreach (var neighbor in _networkClient.ClientNeighbors) {
-            Console.WriteLine(neighbor.URL);
-        }
     }
 }

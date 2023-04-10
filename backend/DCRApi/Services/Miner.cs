@@ -6,7 +6,7 @@ public class Miner : BackgroundService
     private readonly ILogger<Miner> _logger;
     private readonly ConcurrentQueue<Transaction> _queue = new ConcurrentQueue<Transaction>();
     public Blockchain Blockchain {get; init;}
-    private readonly BlockchainSerializer _blockChainSerializer = new BlockchainSerializer();
+    private readonly BlockchainSerializer _blockchainSerializer = new BlockchainSerializer();
     public CancellationTokenSource miningCTSource = new CancellationTokenSource();
     private readonly NetworkClient _networkClient;
 
@@ -26,14 +26,14 @@ public class Miner : BackgroundService
         else
         {
             var blockJson = System.IO.File.ReadAllText("blockchain.json");
-            Blockchain = _blockChainSerializer.Deserialize(blockJson);
+            Blockchain = _blockchainSerializer.Deserialize(blockJson);
         }
 
         // REPLACE WITH THIS
         // if (System.IO.File.Exists("blockchain.json"))
         // {
         //     string blockJson = System.IO.File.ReadAllText("blockchain.json");
-        //     Blockchain = _blockChainSerializer.Deserialize(blockJson);
+        //     Blockchain = _blockchainSerializer.Deserialize(blockJson);
         // }
     }
 
@@ -75,8 +75,9 @@ public class Miner : BackgroundService
     // Send newly mined block to all neighbours
     private void ShareBlock(Block block)
     {
-        var blockJson = _blockChainSerializer.Serialize(block);
-        _networkClient.Broadcast(blockJson);
+        Console.WriteLine($"Broadcasting block {block.Hash}");
+        var blockJson = _blockchainSerializer.Serialize(block);
+        _networkClient.BroadcastBlock(blockJson);
     }
 
     public void ReceiveBlock(Block block)
@@ -138,17 +139,16 @@ public class Miner : BackgroundService
                 txs.Add(transaction);
             }
         }
-        Blockchain.AddBlock(txs, mineCT);
+        var addedBlock = Blockchain.MineTransactions(txs, mineCT);
         if (!mineCT.IsCancellationRequested)
         {
-            //Console.WriteLine("Should share");
+            ShareBlock(addedBlock);
         }
         if (mineCT.IsCancellationRequested)
         {
             Console.WriteLine("Cancellation was requested");
             miningCTSource.TryReset();
         }
-        // if task is not cancelled call ShareBlock();
     }
     public void AddTransaction(Transaction tx)
     {
