@@ -7,35 +7,37 @@ public class Miner : BackgroundService
 {
     private readonly ILogger<Miner> _logger;
     private readonly ConcurrentQueue<Transaction> _queue = new ConcurrentQueue<Transaction>();
-    public BlockChain Blockchain {get; init;}
-    private readonly BlockChainSerializer _blockChainSerializer = new BlockChainSerializer();
+    public Blockchain Blockchain {get; init;}
+    private readonly BlockchainSerializer _blockchainSerializer = new BlockchainSerializer();
     private CancellationTokenSource miningCTSource = new CancellationTokenSource();
+    private readonly NetworkClient _networkClient;
     private readonly MinerSettings _settings;
 
-    public Miner(ILogger<Miner> logger, IOptions<MinerSettings> settings)
+    public Miner(ILogger<Miner> logger, IOptions<MinerSettings> settings, NetworkClient networkClient)
     {
         _logger = logger;
         _settings = settings.Value;
+        _networkClient = networkClient;
         // When we add network we should not create a blockchain.json from scract
         // but instead ask neighbors for the up to date version, so this should be removed and replaced
         // by below comment:
         if (!System.IO.File.Exists("blockchain.json"))
         {
             CancellationToken mineCT = miningCTSource.Token;
-            Blockchain = new BlockChain(_settings.Difficulty);
+            Blockchain = new Blockchain(_settings.Difficulty);
             Blockchain.Initialize(mineCT);
         }
         else
         {
             var blockJson = System.IO.File.ReadAllText("blockchain.json");
-            Blockchain = _blockChainSerializer.Deserialize(blockJson);
+            Blockchain = _blockchainSerializer.Deserialize(blockJson);
         }
 
         // REPLACE WITH THIS
         // if (System.IO.File.Exists("blockchain.json"))
         // {
         //     string blockJson = System.IO.File.ReadAllText("blockchain.json");
-        //     Blockchain = _blockChainSerializer.Deserialize(blockJson);
+        //     Blockchain = _blockchainSerializer.Deserialize(blockJson);
         // }
     }
 
@@ -106,7 +108,7 @@ public class Miner : BackgroundService
         }
 
         int LocalChainLength = Blockchain.Chain.Count();
-        BlockChain RemoteChain = new BlockChain(Blockchain.Difficulty);
+        Blockchain RemoteChain = new Blockchain(Blockchain.Difficulty);
         RemoteChain.Append(RemoteHead);
         for (int i = RemoteHead.Index; i >= 0; i--)
         {
@@ -144,13 +146,15 @@ public class Miner : BackgroundService
     // Send newly mined block to all neighbours
     private void ShareBlock(Block block)
     {
-        throw new NotImplementedException();
+        Console.WriteLine($"Broadcasting block {block.Hash}");
+        var blockJson = _blockchainSerializer.Serialize(block);
+        _networkClient.BroadcastBlock(blockJson);
     }
 
     // Step 1  : If block has same index or lower than local head, ignore it.
     // Step 2  : Check if block is valid and ignore if not.
     // Step 3  : call ResyncLarger()
-    private void ReceiveBlock(string sender, Block block)
+    public void ReceiveBlock(Block block) // TODO: Add sender parameter?
     {
         throw new NotImplementedException();
         if (block.Index <= Blockchain.GetHead().Index)
@@ -161,14 +165,14 @@ public class Miner : BackgroundService
         {
             return;
         }
-        ResyncLarger(sender, block);
+        // ResyncLarger(sender, block); //TODO: How to communicate back to sender?
     }
 
     // ------------------------------------------------------------------------------------------------------------
 
     public override async Task StartAsync(CancellationToken stoppingToken)
     {
-        // DiscoverNetwork();
+        _networkClient.DiscoverNetwork();
         // ResyncBlockchain();
         // GoOnline();
         _logger.LogInformation("Starting Node");
@@ -177,7 +181,7 @@ public class Miner : BackgroundService
     public override async Task StopAsync(CancellationToken stoppingToken)
     {
         Blockchain.Save();
-        // GoOffline();
+        await _networkClient.DisconnectFromNetwork();
         _logger.LogInformation($"Stopping Node");
         await base.StopAsync(stoppingToken);
     }
@@ -215,11 +219,10 @@ public class Miner : BackgroundService
                 txs.Add(transaction);
             }
         }
-        Blockchain.AddBlock(txs, miningCT);
+        var newBlock = Blockchain.MineTransactions(txs, miningCT);
         if (!miningCT.IsCancellationRequested)
         {
-            Console.WriteLine("Should share");
-            // Shareblock
+            ShareBlock(newBlock);
         }
         if (miningCT.IsCancellationRequested)
         {

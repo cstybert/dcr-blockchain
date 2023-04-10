@@ -12,7 +12,7 @@ public class DCRController : ControllerBase
 
     private readonly ILogger<DCRController> _logger;
     private readonly Miner _miner;
-    private readonly BlockChainSerializer _blockChainSerializer = new BlockChainSerializer();
+    private readonly BlockchainSerializer _blockchainSerializer = new BlockchainSerializer();
     private readonly GraphSerializer _graphSerializer = new GraphSerializer();
     private readonly GraphCreator _graphCreator = new GraphCreator();
     private readonly GraphExecutor _graphExecutor = new GraphExecutor();

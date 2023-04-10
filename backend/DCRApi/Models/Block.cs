@@ -9,8 +9,8 @@ public class Block
     public string? PreviousBlockHash {get; set;}
     [JsonProperty]
     private DateTime _timestamp;
-    public string Hash {get; private set;}
-    public int Nonce {get; private set;}
+    public string Hash {get; set;}
+    public int Nonce {get; set;}
     private List<Transaction> _transactions;
     public int Index {get; init;}
 
