@@ -40,4 +40,12 @@ public class BlockchainController : ControllerBase
 
         return Ok();
     }
+
+    [HttpPost("transaction")]
+    public IActionResult ReceiveTransaction(Transaction transaction)
+    {
+        Console.WriteLine($"Received Transaction {transaction.Id}");
+        _miner.AddTransaction(transaction);
+        return Ok();
+    }
 }

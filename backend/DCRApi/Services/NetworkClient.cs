@@ -99,12 +99,27 @@ public class NetworkClient : IDisposable
         }
     }
 
-    public async void BroadcastBlock(string blockJson) {
+    public void BroadcastBlock(string blockJson) {
         var content = new StringContent(blockJson, Encoding.UTF8, "application/json");
         foreach (var neighbor in ClientNeighbors) {
             try
             {
-                await _httpClient.PostAsync($"{neighbor.URL}/blockchain/block", content);
+                _httpClient.PostAsync($"{neighbor.URL}/blockchain/block", content);
+            }
+            catch (Exception ex)
+            {
+                // TODO: Determine if we should remove unreliable neighbor
+                PrintError(ex);
+            }
+        }
+    }
+
+    public void BroadcastTransaction(string transactionJson) {
+        var content = new StringContent(transactionJson, Encoding.UTF8, "application/json");
+        foreach (var neighbor in ClientNeighbors) {
+            try
+            {
+                _httpClient.PostAsync($"{neighbor.URL}/blockchain/transaction", content);
             }
             catch (Exception ex)
             {

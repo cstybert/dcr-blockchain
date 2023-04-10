@@ -236,6 +236,9 @@ public class Miner : BackgroundService
     }
     public void AddTransaction(Transaction tx)
     {
-        _queue.Enqueue(tx);
+        if (!_queue.Any(t => t.Id == tx.Id))
+        {
+            _queue.Enqueue(tx);
+        }
     }
 }

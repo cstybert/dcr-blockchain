@@ -16,6 +16,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSingleton<NetworkClient>(client);
 builder.Services.AddSingleton<Miner>();
+
 builder.Services.AddHostedService<Miner>(s => s.GetRequiredService<Miner>());
 
 var app = builder.Build();
