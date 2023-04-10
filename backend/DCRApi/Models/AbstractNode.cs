@@ -9,29 +9,33 @@ public abstract class AbstractNode
     public  NetworkClient NetworkClient {get; init;}
     // miningCTSource is present in all nodes, to allow for the same implementation in resyncing blockchain
     // even if it is not used in other node types than miner.
-    protected CancellationTokenSource miningCTSource = new CancellationTokenSource();
+    public CancellationTokenSource miningCTSource = new CancellationTokenSource();
     public abstract void HandleTransaction(Transaction tx);
+    public abstract void Mine();
     protected int Id = new Random().Next();
 
-    protected BlockchainSettings Settings { get; }
 
-
-    public AbstractNode(IOptions<BlockchainSettings> settings, NetworkClient networkClient)
+    public AbstractNode(NetworkClient networkClient)
     {
-        Settings = settings.Value;
         NetworkClient = networkClient;
+        Console.WriteLine("In constructor");
         if (!System.IO.File.Exists($"blockchain{Id.ToString()}.json"))
         {
+            Console.WriteLine("Getting Blockchain");
             Blockchain? blockchain = NetworkClient.GetBlockchain().Result;
             CancellationToken mineCT = miningCTSource.Token;
             if (blockchain is not null)
             {
+                Console.WriteLine("Blockchain is not null");
                 Blockchain = blockchain;
+                Save();
             }
             else
             {
+                Console.WriteLine("Blockchain is null");
                 Blockchain = new Blockchain(Settings.Difficulty);
                 Blockchain.Initialize(mineCT);
+                Save();
             }
         }
         else
@@ -39,6 +43,7 @@ public abstract class AbstractNode
             var blockJson = System.IO.File.ReadAllText($"blockchain{Id.ToString()}.json");
             Blockchain = _blockchainSerializer.Deserialize(blockJson);
             ResyncBlockchain(Settings.NumberNeighbours);
+            Save();
         }
     }
 
@@ -63,6 +68,7 @@ public abstract class AbstractNode
             }
         }
     }
+
 
     protected void Save()
     {

@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-
+using Newtonsoft.Json;
 
 namespace DCR;
 [ApiController]
@@ -23,9 +23,8 @@ public class BlockchainController : ControllerBase
     [HttpGet("full")]
     public IActionResult GetBlockchain()
     {
-        Console.WriteLine("Blockchain head is : ", _node.Blockchain.GetHead().Index);
         string blockchainJson = _blockchainSerializer.Serialize(_node.Blockchain);
-        Console.WriteLine("Going to return : ", blockchainJson);
+        Console.WriteLine("Going to return : " + blockchainJson);
         return Ok(blockchainJson);
     }
 
@@ -51,6 +50,8 @@ public class BlockchainController : ControllerBase
     [HttpPost("block")]
     public IActionResult ReceiveBlock(ShareBlock req)
     {
+        string blockJson = JsonConvert.SerializeObject(req.Block);
+        Console.WriteLine($"Received block {blockJson}");
         Console.WriteLine($"Received block {req.Block.Hash}");
         _node.ReceiveBlock(req);
 

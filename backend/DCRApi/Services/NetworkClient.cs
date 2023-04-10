@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text;
 
 namespace DCR;
@@ -113,6 +114,7 @@ public class NetworkClient : IDisposable
                     Console.WriteLine($"Getting : {neighbour.URL}/blockchain/full");
                     HttpResponseMessage res = await _httpClient.GetAsync($"{neighbour.URL}/blockchain/full");
                     string responseContent = await res.Content.ReadAsStringAsync();
+                    Console.WriteLine("Response : " + responseContent);
                     blockchain = _blockchainSerializer.Deserialize(responseContent);
                 }
                 catch (Exception ex) {

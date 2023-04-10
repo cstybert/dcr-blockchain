@@ -1,4 +1,5 @@
 using DCR;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options; // Import the namespace for IOptions
 
 var address = "localhost";
@@ -27,18 +28,23 @@ var configuration = builder.Configuration;
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSingleton<NetworkClient>(networkClient);
-AbstractNode node;
 if (type == "miner") {
-    node = new Miner(loggerFactory.CreateLogger<Miner>(), Options.Create(new BlockchainSettings()), networkClient);
-    builder.Services.Configure<BlockchainSettings>(configuration.GetSection(nameof(BlockchainSettings)));
+    Miner node = new Miner(loggerFactory.CreateLogger<Miner>(), networkClient);
+    builder.Services.AddSingleton<AbstractNode>(node);
     builder.Services.AddSingleton<MinerService>();
     builder.Services.AddHostedService<MinerService>(s => s.GetRequiredService<MinerService>());
-    builder.Services.AddSingleton<Miner>();
-} else {
-    node = new FullNode(loggerFactory.CreateLogger<FullNode>(), Options.Create(new BlockchainSettings()), networkClient);
-}
-builder.Services.AddSingleton<AbstractNode>(node);
 
+} else {
+    FullNode node = new FullNode(loggerFactory.CreateLogger<FullNode>(), networkClient);
+    builder.Services.AddSingleton<AbstractNode>(node);
+}
+// if (type == "miner") {
+//     builder.Services.AddSingleton<AbstractNode, Miner>();
+//     builder.Services.AddSingleton<MinerService>();
+//     builder.Services.AddHostedService<MinerService>(s => s.GetRequiredService<MinerService>());
+// } else {
+//     builder.Services.AddSingleton<AbstractNode, FullNode>();
+// }
 var app = builder.Build();
 app.UseAuthorization();
 app.MapControllers();

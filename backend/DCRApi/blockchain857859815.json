@@ -1,0 +1,21 @@
+{
+  "Chain": [
+    {
+      "PreviousBlockHash": "genesis",
+      "Hash": "000vI0VtfwQsHWD/UzR9ADrgbH+YdrkW3jHq9UhLSc4=",
+      "Nonce": 208648,
+      "Index": 0,
+      "Timestamp": "0001-01-01T00:00:00",
+      "Transactions": []
+    },
+    {
+      "PreviousBlockHash": "000vI0VtfwQsHWD/UzR9ADrgbH+YdrkW3jHq9UhLSc4=",
+      "Hash": "000WVWEeapso7g+44LMjtQg9U3UB+qyF2nBPEZwXvQw=",
+      "Nonce": 530739,
+      "Index": 1,
+      "Timestamp": "0001-01-01T00:00:00",
+      "Transactions": []
+    }
+  ],
+  "Difficulty": 3
+}

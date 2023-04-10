@@ -9,8 +9,8 @@ public class Miner : AbstractNode
     private readonly ConcurrentQueue<Transaction> _queue = new ConcurrentQueue<Transaction>();
     private readonly BlockchainSerializer _blockchainSerializer = new BlockchainSerializer();
 
-    public Miner(ILogger<Miner> logger, IOptions<BlockchainSettings> settings, NetworkClient networkClient) 
-    : base(settings, networkClient)
+    public Miner(ILogger<Miner> logger, NetworkClient networkClient) 
+    : base(networkClient)
     {
         _logger = logger;
     }
@@ -20,7 +20,7 @@ public class Miner : AbstractNode
         miningCTSource.Cancel();
     }
 
-    public void Mine()
+    public override void Mine()
     {
         CancellationToken miningCT = miningCTSource.Token;
         List<Transaction> txs = new List<Transaction>();
@@ -45,7 +45,7 @@ public class Miner : AbstractNode
         var newBlock = Blockchain.MineTransactions(txs, miningCT);
         if (!miningCT.IsCancellationRequested)
         {
-            // ShareBlock(newBlock);
+            ShareBlock(newBlock);
             Save();
         }
         if (miningCT.IsCancellationRequested)

@@ -5,15 +5,13 @@ namespace DCR;
 public class MinerService : BackgroundService
 {
     private readonly ILogger _logger;
-    private readonly Miner _miner;
-    private BlockchainSettings _settings;
+    private readonly AbstractNode _miner;
     
 
-    public MinerService(ILogger<MinerService> logger, Miner miner, IOptions<BlockchainSettings> settings)
+    public MinerService(ILogger<MinerService> logger, AbstractNode miner)
     {
         _logger = logger;
         _miner = miner;
-        _settings = settings.Value;
     }
 
     public override async Task StartAsync(CancellationToken stoppingToken)
@@ -35,7 +33,7 @@ public class MinerService : BackgroundService
             Task task = new Task(new System.Action(_miner.Mine));
             task.Start();
             await task;
-            Thread.Sleep(_settings.TimeToSleep); // For testing, a block is added every 15 seconds
+            Thread.Sleep(Settings.TimeToSleep); // For testing, a block is added every 15 seconds
         }
     }
 }
