@@ -1,12 +1,13 @@
 using DCR;
 
 var address = "localhost";
-var port = 4300;
+var frontendPort = 8080;
+var backendPort = 4300;
 if (args.Length == 2) {
-    address = args[0];
-    port = Convert.ToInt32(args[1]);
+    frontendPort = Convert.ToInt32(args[0]);
+    backendPort = Convert.ToInt32(args[1]);
 }
-var client = new NetworkClient(address, port);
+var client = new NetworkClient(address, backendPort);
 string[] appArgs = {$"--urls={client.ClientNode.URL}"};
 var builder = WebApplication.CreateBuilder(appArgs);
 var configuration = builder.Configuration;
@@ -21,6 +22,6 @@ var app = builder.Build();
 app.UseAuthorization();
 app.MapControllers();
 app.UseCors(
-    options => options.WithOrigins("http://localhost:8080").AllowAnyMethod().AllowAnyHeader()
+    options => options.WithOrigins($"http://{address}:{frontendPort}").AllowAnyMethod().AllowAnyHeader()
 );
 app.Run();

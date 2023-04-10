@@ -156,7 +156,7 @@ public class Miner : BackgroundService
     // Step 3  : call ResyncLarger()
     public void ReceiveBlock(Block block) // TODO: Add sender parameter?
     {
-        throw new NotImplementedException();
+        return;
         if (block.Index <= Blockchain.GetHead().Index)
         {
             return;
