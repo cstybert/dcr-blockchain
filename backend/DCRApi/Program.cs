@@ -9,14 +9,10 @@ if (args.Length == 2) {
 var client = new NetworkClient(address, port);
 string[] appArgs = {$"--urls={client.ClientNode.URL}"};
 var builder = WebApplication.CreateBuilder(appArgs);
-var Configuration = builder.Configuration;
-
+var configuration = builder.Configuration;
+builder.Services.Configure<MinerSettings>(configuration.GetSection(nameof(MinerSettings)));
 builder.Services.AddControllers();
-//builder.Services.AddControllers().AddNewtonsoftJson();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-//builder.Services.AddSwaggerGen();
-
 builder.Services.AddSingleton<NetworkClient>(client);
 builder.Services.AddSingleton<Miner>();
 builder.Services.AddHostedService<Miner>(s => s.GetRequiredService<Miner>());

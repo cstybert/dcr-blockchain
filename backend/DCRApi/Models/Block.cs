@@ -67,4 +67,12 @@ public class Block
             Hash = GetHash();
         }
     }
+
+    public bool IsValid(int Difficulty)
+    {
+        string leadingzeroes = new string('0', Difficulty);
+        // Check leading zeroes and hash are correct
+        return  (Hash.Substring(0, Difficulty) == leadingzeroes) 
+             && (Hash == GetHash());
+    }
 }

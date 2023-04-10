@@ -90,6 +90,28 @@ public class Blockchain
         Save();
     }
 
+    public void RemoveRange(int index, int count)
+    {
+        _chain.RemoveRange(index, count);
+    }
+    public void Append(Block block) 
+    {
+        _chain.Add(block);
+        Save();
+    }
+
+    public void Append(List<Block> block) 
+    {
+        _chain.AddRange(block);
+        Save();
+    }
+
+    public void Prepend(Block block) 
+    {
+        _chain.Prepend(block);
+        Save();
+    }
+
     public Block GetHead()
     {
         return _chain[_chain.Count - 1];
