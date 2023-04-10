@@ -2,9 +2,9 @@ namespace DCR;
 public  class ShareBlock
 {
     public Block Block {get; init;}
-    public Node Sender {get; init;}
+    public NetworkNode Sender {get; init;}
 
-    public ShareBlock(Block block, Node sender)
+    public ShareBlock(Block block, NetworkNode sender)
     {
         Block = block;
         Sender = sender;

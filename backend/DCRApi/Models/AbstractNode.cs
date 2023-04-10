@@ -1,12 +1,12 @@
 namespace DCR;
-public abstract class AbstractNode : BackgroundService
+public abstract class AbstractNode
 {
     public abstract Blockchain Blockchain {get; init;}
     private readonly BlockchainSerializer _blockchainSerializer = new BlockchainSerializer();
     public abstract  NetworkClient NetworkClient {get; init;}
     // miningCTSource is present in all nodes, to allow for the same implementation in resyncing blockchain
     // even if it is not used in other node types than miner.
-    private CancellationTokenSource miningCTSource = new CancellationTokenSource();
+    protected CancellationTokenSource miningCTSource = new CancellationTokenSource();
     public abstract void HandleTransaction(Transaction tx);
 
     protected async void ResyncBlockchain(int NumberNeighbours)
@@ -30,7 +30,7 @@ public abstract class AbstractNode : BackgroundService
         }
     }
 
-    private async void Resync(Node Node, Block RemoteHead)
+    private async void Resync(NetworkNode Node, Block RemoteHead)
     {
         if (!RemoteHead.IsValid(Blockchain.Difficulty))
         {
@@ -82,8 +82,7 @@ public abstract class AbstractNode : BackgroundService
     protected void ShareBlock(Block block)
     {
         Console.WriteLine($"Broadcasting block {block.Hash}");
-        var blockJson = _blockchainSerializer.Serialize(block);
-        NetworkClient.BroadcastBlock(blockJson);
+        NetworkClient.BroadcastBlock(block);
     }
 
     public void ReceiveBlock(ShareBlock req)

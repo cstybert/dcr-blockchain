@@ -28,13 +28,13 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSingleton<NetworkClient>(networkClient);
 AbstractNode node;
 if (type == "miner") {
-    node = new Miner(loggerFactory.CreateLogger<Miner>(), Options.Create(new MinerSettings()), networkClient);
-    builder.Services.Configure<MinerSettings>(configuration.GetSection(nameof(MinerSettings)));
+    node = new Miner(loggerFactory.CreateLogger<Miner>(), Options.Create(new BlockchainSettings()), networkClient);
+    builder.Services.Configure<BlockchainSettings>(configuration.GetSection(nameof(BlockchainSettings)));
     builder.Services.AddSingleton<MinerService>();
     builder.Services.AddHostedService<MinerService>(s => s.GetRequiredService<MinerService>());
     builder.Services.AddSingleton<Miner>();
 } else {
-    node = new FullNode(loggerFactory.CreateLogger<FullNode>(), networkClient);
+    node = new FullNode(loggerFactory.CreateLogger<FullNode>(), Options.Create(new BlockchainSettings()), networkClient);
 }
 builder.Services.AddSingleton<AbstractNode>(node);
 

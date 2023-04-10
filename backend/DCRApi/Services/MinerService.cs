@@ -14,8 +14,6 @@ public class MinerService : BackgroundService
     public override async Task StartAsync(CancellationToken stoppingToken)
     {
         _miner.NetworkClient.DiscoverNetwork();
-        // ResyncBlockchain();
-        // GoOnline();
         _logger.LogInformation("Starting Node");
         await base.StartAsync(stoppingToken);
     }

@@ -1,6 +1,6 @@
 namespace DCR;
 
-public class MinerSettings
+public class BlockchainSettings
 {
     public int TimeToSleep {get; set;}
     public int SizeOfBlocks {get; set;}

@@ -18,6 +18,11 @@ public class NetworkSerializer
         return JsonConvert.SerializeObject(connectNode, Formatting.Indented);
     }
 
+    public string Serialize(ShareBlock shareBlock)
+    {
+        return JsonConvert.SerializeObject(shareBlock, Formatting.Indented);
+    }
+
     public List<NetworkNode> Deserialize(string json)
     {
         return JsonConvert.DeserializeObject<List<NetworkNode>>(json)!;

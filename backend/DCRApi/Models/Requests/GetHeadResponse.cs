@@ -2,8 +2,8 @@ namespace DCR;
 public class GetHeadResponse
 {
     public Block RemoteBlock {get; init;}
-    public Node Node {get; init;}
-    public GetHeadResponse(Block block, Node node)
+    public NetworkNode Node {get; init;}
+    public GetHeadResponse(Block block, NetworkNode node)
     {
         RemoteBlock = block;
         Node = node;
