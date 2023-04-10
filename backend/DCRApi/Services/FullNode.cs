@@ -19,6 +19,12 @@ public class FullNode : AbstractNode
 
     public override void HandleTransaction(Transaction tx)
     {
-        Console.WriteLine("Handle transaction");
+        lock (Blockchain)
+        {
+            if (!Blockchain.Chain.Any(b => b.Transactions.Any(t => t.Id == tx.Id)))
+            {
+                NetworkClient.BroadcastTransaction(tx);
+            }
+        }
     }
 }

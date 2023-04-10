@@ -33,7 +33,6 @@ public class MinerService : BackgroundService
             Task task = new Task(new System.Action(_miner.Mine));
             task.Start();
             await task;
-            Thread.Sleep(Settings.TimeToSleep); // For testing, a block is added every 15 seconds
         }
     }
 }

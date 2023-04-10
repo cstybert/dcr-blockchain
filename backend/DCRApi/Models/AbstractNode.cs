@@ -18,10 +18,8 @@ public abstract class AbstractNode
     public AbstractNode(NetworkClient networkClient)
     {
         NetworkClient = networkClient;
-        Console.WriteLine("In constructor");
         if (!System.IO.File.Exists($"blockchain{Id.ToString()}.json"))
         {
-            Console.WriteLine("Getting Blockchain");
             Blockchain? blockchain = NetworkClient.GetBlockchain().Result;
             CancellationToken mineCT = miningCTSource.Token;
             if (blockchain is not null)
@@ -72,7 +70,6 @@ public abstract class AbstractNode
 
     protected void Save()
     {
-        Console.WriteLine("in save");
         var blockchainJson = _blockchainSerializer.Serialize(Blockchain);
         using (StreamWriter sw = System.IO.File.CreateText($"blockchain{Id.ToString()}.json"))
         {
@@ -133,16 +130,20 @@ public abstract class AbstractNode
     // Send newly mined block to all neighbours
     protected void ShareBlock(Block block)
     {
-        Console.WriteLine($"Broadcasting block {block.Hash}");
+        string blockJson = JsonConvert.SerializeObject(block);
+        Console.WriteLine($"Broadcasting block {blockJson}");
         NetworkClient.BroadcastBlock(block);
     }
 
     public void ReceiveBlock(ShareBlock req)
     {
-        if (req.Block.Index <= Blockchain.GetHead().Index || !req.Block.IsValid(Blockchain.Difficulty))
+        lock(Blockchain)
         {
-            return;
+            if (req.Block.Index <= Blockchain.GetHead().Index || !req.Block.IsValid(Blockchain.Difficulty))
+            {
+                return;
+            }
+            Resync(req.Sender, req.Block);
         }
-        Resync(req.Sender, req.Block);
     }
 }

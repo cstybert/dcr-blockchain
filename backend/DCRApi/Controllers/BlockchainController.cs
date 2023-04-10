@@ -24,7 +24,6 @@ public class BlockchainController : ControllerBase
     public IActionResult GetBlockchain()
     {
         string blockchainJson = _blockchainSerializer.Serialize(_node.Blockchain);
-        Console.WriteLine("Going to return : " + blockchainJson);
         return Ok(blockchainJson);
     }
 
@@ -51,8 +50,6 @@ public class BlockchainController : ControllerBase
     public IActionResult ReceiveBlock(ShareBlock req)
     {
         string blockJson = JsonConvert.SerializeObject(req.Block);
-        Console.WriteLine($"Received block {blockJson}");
-        Console.WriteLine($"Received block {req.Block.Hash}");
         _node.ReceiveBlock(req);
 
         return Ok();

@@ -44,7 +44,9 @@ public class Block
     {
         string jsonTx = JsonConvert.SerializeObject(_transactions);
         // Hash to be calculated for all fields except Hash
-        string inputstring = $"{PreviousBlockHash}{Timestamp}{Nonce}{jsonTx}";
+        // string inputstring = $"{PreviousBlockHash}{Timestamp}{Nonce}{jsonTx}";
+        // Fix for now
+        string inputstring = $"{PreviousBlockHash}{Nonce}{jsonTx}";
 
         byte[] inputbytes = Encoding.ASCII.GetBytes(inputstring);
         byte[] hash = SHA256.HashData(inputbytes);
@@ -68,14 +70,9 @@ public class Block
 
     public bool IsValid(int Difficulty)
     {
-        Console.WriteLine("checking validity of block");
         string leadingzeroes = new string('0', Difficulty);
         // Check leading zeroes and hash are correct
         bool leadingzeroestruth = Hash.Substring(0, Difficulty) == leadingzeroes;
-        Console.WriteLine($"Did have enough leading zeroes {leadingzeroestruth}");
-        Console.WriteLine($"The hash is {Hash}");
-        Console.WriteLine($"GetHash is  {GetHash()}");
-        Console.WriteLine("The block is : " + JsonConvert.SerializeObject(this));
         return  (Hash.Substring(0, Difficulty) == leadingzeroes) 
              && (Hash == GetHash());
     }

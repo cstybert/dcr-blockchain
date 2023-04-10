@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace DCR;
 
@@ -111,10 +112,8 @@ public class NetworkClient : IDisposable
                 int neighbourIndex = r.Next(0, ClientNeighbors.Count - 1);
                 var neighbour = ClientNeighbors[neighbourIndex];
                 try {
-                    Console.WriteLine($"Getting : {neighbour.URL}/blockchain/full");
                     HttpResponseMessage res = await _httpClient.GetAsync($"{neighbour.URL}/blockchain/full");
                     string responseContent = await res.Content.ReadAsStringAsync();
-                    Console.WriteLine("Response : " + responseContent);
                     blockchain = _blockchainSerializer.Deserialize(responseContent);
                 }
                 catch (Exception ex) {
@@ -205,7 +204,8 @@ public class NetworkClient : IDisposable
         }
     }
 
-    public void BroadcastTransaction(string transactionJson) {
+    public void BroadcastTransaction(Transaction Transaction) {
+        string transactionJson = JsonConvert.SerializeObject(Transaction);
         var content = new StringContent(transactionJson, Encoding.UTF8, "application/json");
         foreach (var neighbor in ClientNeighbors) {
             try

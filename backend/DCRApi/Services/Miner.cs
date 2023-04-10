@@ -42,6 +42,7 @@ public class Miner : AbstractNode
                 }
             }
         }
+        Thread.Sleep(Settings.TimeToSleep); // For testing, a block is added every 15 seconds
         var newBlock = Blockchain.MineTransactions(txs, miningCT);
         if (!miningCT.IsCancellationRequested)
         {
@@ -56,9 +57,12 @@ public class Miner : AbstractNode
     }
     public override void HandleTransaction(Transaction tx)
     {
-        if (!_queue.Any(t => t.Id == tx.Id))
+        lock (_queue)
         {
-            _queue.Enqueue(tx);
+            if (!_queue.Any(t => t.Id == tx.Id))
+            {
+                _queue.Enqueue(tx);
+            }
         }
     }
 }
