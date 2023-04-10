@@ -156,7 +156,6 @@ public class Miner : BackgroundService
     // Step 3  : call ResyncLarger()
     public void ReceiveBlock(Block block) // TODO: Add sender parameter?
     {
-        return;
         if (block.Index <= Blockchain.GetHead().Index)
         {
             return;
@@ -207,7 +206,8 @@ public class Miner : BackgroundService
         CancellationToken miningCT = miningCTSource.Token;
         List<Transaction> txs = new List<Transaction>();
         Transaction? transaction;
-        for (int i = 0; i < _settings.SizeOfBlocks; i++) // Blocks contain 10 transactions
+        int i = 0;
+        while (i < _settings.SizeOfBlocks) // Blocks contain 10 transactions
         {
             _queue.TryDequeue(out transaction);
             if (transaction is null)
@@ -216,7 +216,11 @@ public class Miner : BackgroundService
             }
             else
             {
-                txs.Add(transaction);
+                if (!Blockchain.Chain.Any(b => b.Transactions.Any(t => t.Id == transaction.Id)))
+                {
+                    txs.Add(transaction);
+                    i++;
+                }
             }
         }
         var newBlock = Blockchain.MineTransactions(txs, miningCT);
