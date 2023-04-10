@@ -6,15 +6,15 @@ public class NetworkClient : IDisposable
 {
     private NetworkSerializer _networkSerializer;
     private HttpClient _httpClient;
-    public Node ClientNode {get;}
-    public List<Node> ClientNeighbors {get;}
+    public NetworkNode ClientNode {get;}
+    public List<NetworkNode> ClientNeighbors {get;}
 
     public NetworkClient(string address, int port)
     {
         _networkSerializer = new NetworkSerializer();
         _httpClient = new HttpClient();
-        ClientNode = new Node(address, port);
-        ClientNeighbors = new List<Node>();
+        ClientNode = new NetworkNode(address, port);
+        ClientNeighbors = new List<NetworkNode>();
     }
 
     public async void DiscoverNetwork()
@@ -44,7 +44,7 @@ public class NetworkClient : IDisposable
         }
     }
 
-    private async Task<List<Node>> ConnectToDNSServer()
+    private async Task<List<NetworkNode>> ConnectToDNSServer()
     {
         Console.WriteLine("Connecting to DNS server...");
         try {
@@ -56,11 +56,11 @@ public class NetworkClient : IDisposable
         catch (Exception ex)
         {
             PrintError(ex);
-            return new List<Node>();
+            return new List<NetworkNode>();
         }
     }
 
-    public async void ConnectToPeerNetwork(Node node)
+    public async void ConnectToPeerNetwork(NetworkNode node)
     {
         if (AddNode(node)) {
             var peerNeighbors = await ConnectToNode(node);
@@ -74,7 +74,7 @@ public class NetworkClient : IDisposable
         }
     }
 
-    private async Task<List<Node>> ConnectToNode(Node node) {
+    private async Task<List<NetworkNode>> ConnectToNode(NetworkNode node) {
         var content = GetConnectionContent();
         try {
             var peerResponse = await _httpClient.PostAsync($"{node.URL}/network/connect", content);
@@ -84,11 +84,11 @@ public class NetworkClient : IDisposable
         }
         catch (Exception ex) {
             PrintError(ex);
-            return new List<Node>();
+            return new List<NetworkNode>();
         }
     }
 
-    private async Task DisconnectFromNode(Node node) {
+    private async Task DisconnectFromNode(NetworkNode node) {
         var content = GetConnectionContent();
         try {
             await _httpClient.PostAsync($"{node.URL}/network/disconnect", content);
@@ -129,7 +129,7 @@ public class NetworkClient : IDisposable
         }
     }
 
-    public bool AddNode(Node node)
+    public bool AddNode(NetworkNode node)
     {
         if (ClientNeighbors.Count < 125 && !(ClientNode.URL == node.URL) && !ClientNeighbors.Any(n => n.URL == node.URL)) {
             ClientNeighbors.Add(node);
@@ -138,7 +138,7 @@ public class NetworkClient : IDisposable
         return false;
     }
 
-    public void RemoveNode(Node node)
+    public void RemoveNode(NetworkNode node)
     {
         ClientNeighbors.RemoveAll(n => n.URL == node.URL);
     }

@@ -38,7 +38,7 @@ public class NetworkController : ControllerBase
         return Ok();
     }
 
-    private List<Node> DeepCopyNodes(List<Node> nodes)
+    private List<NetworkNode> DeepCopyNodes(List<NetworkNode> nodes)
     {
         return _networkSerializer.Deserialize(_networkSerializer.Serialize(nodes));
     }

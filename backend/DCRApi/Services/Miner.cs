@@ -3,28 +3,27 @@ using Microsoft.Extensions.Options;
 
 namespace DCR;
 
-public class Miner : BackgroundService
+public class Miner : AbstractNode
 {
     private readonly ILogger<Miner> _logger;
     private readonly ConcurrentQueue<Transaction> _queue = new ConcurrentQueue<Transaction>();
-    public Blockchain Blockchain {get; init;}
     private readonly BlockchainSerializer _blockchainSerializer = new BlockchainSerializer();
     private CancellationTokenSource miningCTSource = new CancellationTokenSource();
-    private readonly NetworkClient _networkClient;
-    private readonly MinerSettings _settings;
+    public NetworkClient NetworkClient { get; }
+    public MinerSettings Settings { get; }
 
     public Miner(ILogger<Miner> logger, IOptions<MinerSettings> settings, NetworkClient networkClient)
     {
         _logger = logger;
-        _settings = settings.Value;
-        _networkClient = networkClient;
+        Settings = settings.Value;
+        NetworkClient = networkClient;
         // When we add network we should not create a blockchain.json from scract
         // but instead ask neighbors for the up to date version, so this should be removed and replaced
         // by below comment:
         if (!System.IO.File.Exists("blockchain.json"))
         {
             CancellationToken mineCT = miningCTSource.Token;
-            Blockchain = new Blockchain(_settings.Difficulty);
+            Blockchain = new Blockchain(Settings.Difficulty);
             Blockchain.Initialize(mineCT);
         }
         else
@@ -59,7 +58,7 @@ public class Miner : BackgroundService
             GetBlockchain();
             return;
         }
-        for (int i = 0; i < _settings.NumberNeighbours; i++)
+        for (int i = 0; i < Settings.NumberNeighbours; i++)
         {
             Block block = GetHeadFromNeighbour();
             if (block.Index == Blockchain.GetHead().Index)
@@ -148,13 +147,13 @@ public class Miner : BackgroundService
     {
         Console.WriteLine($"Broadcasting block {block.Hash}");
         var blockJson = _blockchainSerializer.Serialize(block);
-        _networkClient.BroadcastBlock(blockJson);
+        NetworkClient.BroadcastBlock(blockJson);
     }
 
     // Step 1  : If block has same index or lower than local head, ignore it.
     // Step 2  : Check if block is valid and ignore if not.
     // Step 3  : call ResyncLarger()
-    public void ReceiveBlock(Block block) // TODO: Add sender parameter?
+    public override void ReceiveBlock(Block block) // TODO: Add sender parameter?
     {
         if (block.Index <= Blockchain.GetHead().Index)
         {
@@ -169,45 +168,18 @@ public class Miner : BackgroundService
 
     // ------------------------------------------------------------------------------------------------------------
 
-    public override async Task StartAsync(CancellationToken stoppingToken)
-    {
-        _networkClient.DiscoverNetwork();
-        // ResyncBlockchain();
-        // GoOnline();
-        _logger.LogInformation("Starting Node");
-        await base.StartAsync(stoppingToken);
-    }
-    public override async Task StopAsync(CancellationToken stoppingToken)
-    {
-        Blockchain.Save();
-        await _networkClient.DisconnectFromNetwork();
-        _logger.LogInformation($"Stopping Node");
-        await base.StopAsync(stoppingToken);
-    }
-
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            Task task = new Task(new System.Action(Mine));
-            task.Start();
-            await task;
-            Thread.Sleep(_settings.TimeToSleep); // For testing, a block is added every 15 seconds
-        }
-    }
-
     public void CancelMining()
     {
         miningCTSource.Cancel();
     }
 
-    private void Mine()
+    public void Mine()
     {
         CancellationToken miningCT = miningCTSource.Token;
         List<Transaction> txs = new List<Transaction>();
         Transaction? transaction;
         int i = 0;
-        while (i < _settings.SizeOfBlocks) // Blocks contain 10 transactions
+        while (i < Settings.SizeOfBlocks) // Blocks contain 10 transactions
         {
             _queue.TryDequeue(out transaction);
             if (transaction is null)
@@ -234,7 +206,7 @@ public class Miner : BackgroundService
             miningCTSource = new CancellationTokenSource();
         }
     }
-    public void AddTransaction(Transaction tx)
+    public override void HandleTransaction(Transaction tx)
     {
         if (!_queue.Any(t => t.Id == tx.Id))
         {

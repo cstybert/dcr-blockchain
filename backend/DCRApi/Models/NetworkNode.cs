@@ -1,10 +1,10 @@
 namespace DCR;
-public class Node
+public class NetworkNode
 {
     public string Address {get; private set;}
     public int Port {get; private set;}
 
-    public Node(string address, int port) 
+    public NetworkNode(string address, int port) 
     {
         Address = address;
         Port = port;

@@ -9,13 +9,13 @@ public class BlockchainController : ControllerBase
 
     private readonly ILogger<BlockchainController> _logger;
     private readonly NetworkClient _networkClient;
-    private readonly Miner _miner;
+    private readonly AbstractNode _node;
     private readonly BlockchainSerializer _blockchainSerializer;
 
-    public BlockchainController(ILogger<BlockchainController> logger, NetworkClient networkClient, Miner miner)
+    public BlockchainController(ILogger<BlockchainController> logger, NetworkClient networkClient, AbstractNode node)
     {
         _logger = logger;
-        _miner = miner;
+        _node = node;
         _networkClient = networkClient;
         _blockchainSerializer = new BlockchainSerializer();
     }
@@ -23,20 +23,20 @@ public class BlockchainController : ControllerBase
     [HttpGet("full")]
     public IActionResult GetBlockchain()
     {
-        return Ok(_miner.Blockchain.Chain);
+        return Ok(_node.Blockchain.Chain);
     }
 
     [HttpGet("head")]
     public IActionResult GetHeadBlock()
     {
-        return Ok(_miner.Blockchain.GetHead());
+        return Ok(_node.Blockchain.GetHead());
     }
 
     [HttpPost("block")]
     public IActionResult ReceiveBlock(Block receivedBlock)
     {
         Console.WriteLine($"Received block {receivedBlock.Hash}");
-        _miner.ReceiveBlock(receivedBlock);
+        _node.ReceiveBlock(receivedBlock);
 
         return Ok();
     }
@@ -45,7 +45,7 @@ public class BlockchainController : ControllerBase
     public IActionResult ReceiveTransaction(Transaction transaction)
     {
         Console.WriteLine($"Received Transaction {transaction.Id}");
-        _miner.AddTransaction(transaction);
+        _node.HandleTransaction(transaction);
         return Ok();
     }
 }
