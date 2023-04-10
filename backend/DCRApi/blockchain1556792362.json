@@ -1,0 +1,23 @@
+{
+  "Chain": [
+    {
+      "_timestamp": "2023-04-10T20:17:02.445861+02:00",
+      "PreviousBlockHash": "genesis",
+      "Hash": "uNrzE1fhGL/NOfxca/P33PUzEuH9YqHbFVV9RQ7qHng=",
+      "Nonce": 0,
+      "Index": 0,
+      "Timestamp": "2023-04-10T20:17:02.445861+02:00",
+      "Transactions": []
+    },
+    {
+      "_timestamp": "2023-04-10T20:17:02.45452+02:00",
+      "PreviousBlockHash": "uNrzE1fhGL/NOfxca/P33PUzEuH9YqHbFVV9RQ7qHng=",
+      "Hash": "B0wvyaiAK/WGkuf8LzV/gBZZwcit/lnxpYPkI3fP2c8=",
+      "Nonce": 0,
+      "Index": 1,
+      "Timestamp": "2023-04-10T20:17:02.45452+02:00",
+      "Transactions": []
+    }
+  ],
+  "Difficulty": 0
+}

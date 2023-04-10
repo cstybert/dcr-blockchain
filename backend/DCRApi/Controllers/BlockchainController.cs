@@ -23,20 +23,23 @@ public class BlockchainController : ControllerBase
     [HttpGet("full")]
     public IActionResult GetBlockchain()
     {
-        return Ok(_node.Blockchain.Chain);
+        Console.WriteLine("Blockchain head is : ", _node.Blockchain.GetHead().Index);
+        string blockchainJson = _blockchainSerializer.Serialize(_node.Blockchain);
+        Console.WriteLine("Going to return : ", blockchainJson);
+        return Ok(blockchainJson);
     }
 
     [HttpGet("head")]
     public IActionResult GetHeadBlock()
     {
-        return Ok(_node.Blockchain.GetHead());
+        return Ok(_blockchainSerializer.Serialize(_node.Blockchain.GetHead()));
     }
     [HttpGet("{index}")]
     public IActionResult GetBlock(int index)
     {
         try 
         {
-            return Ok(_node.Blockchain.Chain[index]);
+            return Ok(_blockchainSerializer.Serialize(_node.Blockchain.Chain[index]));
         }
         catch (Exception ex)
         {

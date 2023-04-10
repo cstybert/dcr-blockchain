@@ -19,6 +19,7 @@ if (args.Length == 1) {
 }
 
 var networkClient = new NetworkClient(address, backendPort);
+await networkClient.DiscoverNetwork();
 string[] appArgs = {$"--urls={networkClient.ClientNode.URL}"};
 
 var builder = WebApplication.CreateBuilder(appArgs);

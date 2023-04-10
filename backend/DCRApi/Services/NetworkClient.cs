@@ -19,14 +19,19 @@ public class NetworkClient : IDisposable
         ClientNeighbors = new List<NetworkNode>();
     }
 
-    public async void DiscoverNetwork()
+    public async Task DiscoverNetwork()
     {
         // Query DNS Server for seed nodes
         var seedNodes = await ConnectToDNSServer();
 
         Console.WriteLine($"Connecting to seed node networks...");
-        foreach (var node in seedNodes) {
-            ConnectToPeerNetwork(node);
+        await Connect(seedNodes);
+    }
+
+    private async Task Connect(List<NetworkNode> nodes)
+    {
+        foreach (var node in nodes) {
+            await ConnectToPeerNetwork(node);
         }
     }
 
@@ -62,7 +67,7 @@ public class NetworkClient : IDisposable
         }
     }
 
-    public async void ConnectToPeerNetwork(NetworkNode node)
+    public async Task ConnectToPeerNetwork(NetworkNode node)
     {
         if (AddNode(node)) {
             var peerNeighbors = await ConnectToNode(node);
@@ -105,6 +110,7 @@ public class NetworkClient : IDisposable
                 int neighbourIndex = r.Next(0, ClientNeighbors.Count - 1);
                 var neighbour = ClientNeighbors[neighbourIndex];
                 try {
+                    Console.WriteLine($"Getting : {neighbour.URL}/blockchain/full");
                     HttpResponseMessage res = await _httpClient.GetAsync($"{neighbour.URL}/blockchain/full");
                     string responseContent = await res.Content.ReadAsStringAsync();
                     blockchain = _blockchainSerializer.Deserialize(responseContent);

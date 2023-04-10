@@ -1,0 +1,14 @@
+{
+  "Chain": [
+    {
+      "_timestamp": "2023-04-10T19:54:29.051236+02:00",
+      "PreviousBlockHash": "genesis",
+      "Hash": "rHUBZEmFiObHZfmLQEjAYckIgilM4DmC7h1vJGLMuq0=",
+      "Nonce": 0,
+      "Index": 0,
+      "Timestamp": "2023-04-10T19:54:29.051236+02:00",
+      "Transactions": []
+    }
+  ],
+  "Difficulty": 0
+}

@@ -1,14 +1,47 @@
 namespace DCR;
+
+using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 public abstract class AbstractNode
 {
-    public abstract Blockchain Blockchain {get; init;}
+    public Blockchain Blockchain {get; init;}
     private readonly BlockchainSerializer _blockchainSerializer = new BlockchainSerializer();
-    public abstract  NetworkClient NetworkClient {get; init;}
+    public  NetworkClient NetworkClient {get; init;}
     // miningCTSource is present in all nodes, to allow for the same implementation in resyncing blockchain
     // even if it is not used in other node types than miner.
     protected CancellationTokenSource miningCTSource = new CancellationTokenSource();
     public abstract void HandleTransaction(Transaction tx);
     protected int Id = new Random().Next();
+
+    protected BlockchainSettings Settings { get; }
+
+
+    public AbstractNode(IOptions<BlockchainSettings> settings, NetworkClient networkClient)
+    {
+        Settings = settings.Value;
+        NetworkClient = networkClient;
+        if (!System.IO.File.Exists($"blockchain{Id.ToString()}.json"))
+        {
+            Blockchain? blockchain = NetworkClient.GetBlockchain().Result;
+            CancellationToken mineCT = miningCTSource.Token;
+            if (blockchain is not null)
+            {
+                Blockchain = blockchain;
+            }
+            else
+            {
+                Blockchain = new Blockchain(Settings.Difficulty);
+                Blockchain.Initialize(mineCT);
+            }
+        }
+        else
+        {
+            var blockJson = System.IO.File.ReadAllText($"blockchain{Id.ToString()}.json");
+            Blockchain = _blockchainSerializer.Deserialize(blockJson);
+            ResyncBlockchain(Settings.NumberNeighbours);
+        }
+    }
+
 
     protected async void ResyncBlockchain(int NumberNeighbours)
     {
@@ -33,6 +66,7 @@ public abstract class AbstractNode
 
     protected void Save()
     {
+        Console.WriteLine("in save");
         var blockchainJson = _blockchainSerializer.Serialize(Blockchain);
         using (StreamWriter sw = System.IO.File.CreateText($"blockchain{Id.ToString()}.json"))
         {

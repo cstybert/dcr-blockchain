@@ -6,37 +6,13 @@ namespace DCR;
 public class Miner : AbstractNode
 {
     private readonly ILogger<Miner> _logger;
-    public override Blockchain Blockchain {get; init;}
     private readonly ConcurrentQueue<Transaction> _queue = new ConcurrentQueue<Transaction>();
     private readonly BlockchainSerializer _blockchainSerializer = new BlockchainSerializer();
-    public override NetworkClient NetworkClient { get; init; }
-    public BlockchainSettings Settings { get; }
 
-    public Miner(ILogger<Miner> logger, IOptions<BlockchainSettings> settings, NetworkClient networkClient)
+    public Miner(ILogger<Miner> logger, IOptions<BlockchainSettings> settings, NetworkClient networkClient) 
+    : base(settings, networkClient)
     {
         _logger = logger;
-        Settings = settings.Value;
-        NetworkClient = networkClient;
-        if (!System.IO.File.Exists($"blockchain{Id.ToString()}.json"))
-        {
-            Blockchain? blockchain = NetworkClient.GetBlockchain().Result;
-            CancellationToken mineCT = miningCTSource.Token;
-            if (blockchain is not null)
-            {
-                Blockchain = blockchain;
-            }
-            else
-            {
-                Blockchain = new Blockchain(Settings.Difficulty);
-                Blockchain.Initialize(mineCT);
-            }
-        }
-        else
-        {
-            var blockJson = System.IO.File.ReadAllText($"blockchain{Id.ToString()}.json");
-            Blockchain = _blockchainSerializer.Deserialize(blockJson);
-            ResyncBlockchain(Settings.NumberNeighbours);
-        }
     }
 
     public void CancelMining()
@@ -69,7 +45,7 @@ public class Miner : AbstractNode
         var newBlock = Blockchain.MineTransactions(txs, miningCT);
         if (!miningCT.IsCancellationRequested)
         {
-            ShareBlock(newBlock);
+            // ShareBlock(newBlock);
             Save();
         }
         if (miningCT.IsCancellationRequested)

@@ -19,11 +19,11 @@ public class NetworkController : ControllerBase
     }
 
     [HttpPost("connect")]
-    public IActionResult Connect([FromBody] ConnectNode req)
+    public async Task<IActionResult> Connect([FromBody] ConnectNode req)
     {
         _logger.LogTrace($"Received connect request: {req}");
         var clientNeighbors = DeepCopyNodes(_networkClient.ClientNeighbors);
-        _networkClient.ConnectToPeerNetwork(req.Node);
+        await _networkClient.ConnectToPeerNetwork(req.Node);
 
         return Ok(clientNeighbors);
     }
