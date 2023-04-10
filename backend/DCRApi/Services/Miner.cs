@@ -204,7 +204,7 @@ public class Miner : BackgroundService
 
     private void Mine()
     {
-        CancellationToken mineCT = miningCTSource.Token;
+        CancellationToken miningCT = miningCTSource.Token;
         List<Transaction> txs = new List<Transaction>();
         Transaction? transaction;
         for (int i = 0; i < _settings.SizeOfBlocks; i++) // Blocks contain 10 transactions
@@ -219,15 +219,15 @@ public class Miner : BackgroundService
                 txs.Add(transaction);
             }
         }
-        var newBlock = Blockchain.MineTransactions(txs, mineCT);
-        if (!mineCT.IsCancellationRequested)
+        var newBlock = Blockchain.MineTransactions(txs, miningCT);
+        if (!miningCT.IsCancellationRequested)
         {
             ShareBlock(newBlock);
         }
-        if (mineCT.IsCancellationRequested)
+        if (miningCT.IsCancellationRequested)
         {
             Console.WriteLine("Cancellation was requested");
-            miningCTSource.TryReset();
+            miningCTSource = new CancellationTokenSource();
         }
     }
     public void AddTransaction(Transaction tx)
