@@ -1,13 +1,16 @@
 namespace DCR;
 
 using Newtonsoft.Json;
+using Business;
+
 public abstract class AbstractNode
 {
     protected int Id = new Random().Next();
     private string _blockchainFilename { get; }
     public Blockchain Blockchain {get; init;}
     private readonly BlockchainSerializer _blockchainSerializer = new BlockchainSerializer();
-    public  NetworkClient NetworkClient {get; init;}
+    public NetworkClient NetworkClient {get; init;}
+    private GraphExecutor _graphExecutor {get; init;}
     // miningCTSource is present in all nodes, to allow for the same implementation in resyncing blockchain
     // even if it is not used in other node types than miner.
     public CancellationTokenSource miningCTSource = new CancellationTokenSource();
@@ -17,7 +20,9 @@ public abstract class AbstractNode
     public AbstractNode(NetworkClient networkClient)
     {
         NetworkClient = networkClient;
+        _graphExecutor = new GraphExecutor();
         _blockchainFilename = $"blockchain{Id.ToString()}.json";
+
         if (System.IO.File.Exists(_blockchainFilename)) {
             // Load local blockchain and sync with neighbors
             Console.WriteLine("Loading saved blockchain");
@@ -137,6 +142,20 @@ public abstract class AbstractNode
                 return;
             }
             ResyncBlockchainWithNode(sender, receivedBlock);
+        }
+    }
+
+    protected bool IsValidTransaction(Transaction tx) {
+        if (tx.Action == Action.Create) {
+            return tx.Graph.Id != "";
+        } else {
+            var oldGraph = Blockchain.GetGraph(tx.Graph.Id)!;
+            if (oldGraph is not null) {
+                var graphSerializer = new GraphSerializer();
+                var expectedUpdatedGraph = _graphExecutor.Execute(oldGraph, tx.EntityTitle);
+                return tx.Graph.EqualsGraph(expectedUpdatedGraph);
+            }
+            return false;
         }
     }
 

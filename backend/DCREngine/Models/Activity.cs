@@ -38,5 +38,14 @@ namespace Models
             Executed = executed;
             Enabled = true;
         }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null || GetType() != obj.GetType())
+                return false;
+
+            var other = (Activity)obj;
+            return (Title == other.Title) && (Pending == other.Pending) && (Included == other.Included) && (Executed == other.Executed) && (Enabled == other.Enabled);
+        }
     }
 }

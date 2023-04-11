@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Options;
 namespace DCR;
 
 public class FullNode : AbstractNode
@@ -12,11 +11,14 @@ public class FullNode : AbstractNode
 
     public override void HandleTransaction(Transaction tx)
     {
-        lock (Blockchain)
+        if (IsValidTransaction(tx))
         {
-            if (!Blockchain.Chain.Any(b => b.Transactions.Any(t => t.Id == tx.Id)))
+            lock (Blockchain)
             {
-                NetworkClient.BroadcastTransaction(tx);
+                if (!Blockchain.Chain.Any(b => b.Transactions.Any(t => t.Id == tx.Id)))
+                {
+                    NetworkClient.BroadcastTransaction(tx);
+                }
             }
         }
     }

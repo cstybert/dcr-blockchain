@@ -28,7 +28,7 @@ public class DCRController : ControllerBase
         _logger.LogTrace($"Fetching graph {id}");
         _logger.LogInformation($"Block validity: {_node.Blockchain.IsValid()}");
         // TODO Modify getgraph so it only returns if graph is 8 blocks deep
-        Graph graph = _node.Blockchain.GetGraph(id)!;
+        var graph = _node.Blockchain.GetGraph(id)!;
         if (graph is not null)
         {
             return Ok(_node.Blockchain.GetGraph(id));
@@ -40,35 +40,35 @@ public class DCRController : ControllerBase
     public IActionResult Post([FromBody] CreateGraphRequest req)
     {
         _logger.LogInformation($"Adding graph to blockchain : {req}");
-        Graph graph = _graphCreator.Create(req.Activities, req.Relations);
-        Transaction tx = new Transaction(req.Actor, Action.Create, graph);
+        var graph = _graphCreator.Create(req.Activities, req.Relations);
+        var tx = new Transaction(req.Actor, Action.Create, "", graph);
         _node.HandleTransaction(tx);
         _logger.LogInformation($"Block validity: {_node.Blockchain.IsValid()}");
         _logger.LogInformation($"Created Transaction");
-        return Ok("Transaction added");
+        return Ok(graph);
     }
 
     [HttpPut("update/{id}")]
     public IActionResult Put(string id, ExecuteActivityRequest req)
     {
         _logger.LogInformation($"Executing activity {req.ExecutingActivity} in graph {id}");
-        Graph graph = _node.Blockchain.GetGraph(id)!;
+        var graph = _node.Blockchain.GetGraph(id)!;
         if (graph is null)
         {
             return NotFound("Could not find graph");
         }
-        Transaction tx = CreateUpdateGraphTransaction(graph, req.Actor, req.ExecutingActivity);
+        var tx = CreateUpdateGraphTransaction(graph, req.Actor, req.ExecutingActivity);
         _node.HandleTransaction(tx);
         _logger.LogInformation($"Block validity: {_node.Blockchain.IsValid()}");
         _logger.LogInformation($"Updated graph {graph.Id}");
         return Ok("Transaction added");
     }
 
-    private Transaction CreateUpdateGraphTransaction(Graph Graph, string Actor, string ExecutingActivity)
+    private Transaction CreateUpdateGraphTransaction(Graph graph, string actor, string executingActivity)
     {
-        string graphjson = JsonConvert.SerializeObject(Graph);
-        Graph graph_passbyvalue = JsonConvert.DeserializeObject<Graph>(graphjson)!;
-        Graph updatedGraph = _graphExecutor.Execute(graph_passbyvalue, ExecutingActivity);
-        return new Transaction(Actor, Action.Update, updatedGraph);
+        var graphjson = JsonConvert.SerializeObject(graph);
+        var graph_passbyvalue = JsonConvert.DeserializeObject<Graph>(graphjson)!;
+        var updatedGraph = _graphExecutor.Execute(graph_passbyvalue, executingActivity);
+        return new Transaction(actor, Action.Update, executingActivity, updatedGraph);
     }
 }

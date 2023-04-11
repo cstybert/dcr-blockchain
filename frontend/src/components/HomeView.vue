@@ -130,9 +130,7 @@ export default {
       const payload = {'actor': "1", 'executingActivity': title};
       await axios.put(`DCR/update/${this.searchId}`, payload).then(res => {
         if (res.status == 200) {
-          this.activities = res.data['activities'];
-          this.relations = res.data['relations'];
-          this.isAccepting = res.data['accepting'];
+          console.log("Executed activity");
         }
       }).catch(err => {
           console.log(err);

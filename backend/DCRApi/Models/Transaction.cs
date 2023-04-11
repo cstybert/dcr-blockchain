@@ -15,18 +15,24 @@ public class Transaction
     public string Id { get ; init; }
     public string Actor { get; init; }
     public Action Action { get; init; }
+    public string EntityTitle { get; init; }
     public Graph Graph { get; init; }
-    public Transaction(string actor, Action action, Graph graph)
+    public Transaction(string actor, Action action, string entityTitle, Graph graph)
     {
         Actor = actor;
         Action = action;
+        EntityTitle = entityTitle;
         Graph = graph;
+        Id = CreateHash();
+    }
+
+    private string CreateHash() {
         string jsonAction = JsonConvert.SerializeObject(Action);
         string jsonGraph = JsonConvert.SerializeObject(Graph);
-        string inputstring = $"{Actor}{ Action}{jsonAction}{jsonGraph}";
+        string inputstring = $"{Actor}{Action}{EntityTitle}{jsonAction}{jsonGraph}";
 
         byte[] inputbytes = Encoding.ASCII.GetBytes(inputstring);
         byte[] hash = SHA256.HashData(inputbytes);
-        Id = Convert.ToBase64String(hash);
+        return Convert.ToBase64String(hash);
     }
 }

@@ -34,5 +34,14 @@ namespace Models
                 return Activities.All(e => !(e.Included && e.Pending));
             }
         }
+
+        public bool EqualsGraph(Graph otherGraph)
+        {
+            if (otherGraph is null) return false;
+            return  (Id == otherGraph.Id) &&
+                    (Relations.SequenceEqual(otherGraph.Relations)) &&
+                    (Activities.SequenceEqual(otherGraph.Activities)) &&
+                    (Accepting == otherGraph.Accepting);
+        }
     }
 }

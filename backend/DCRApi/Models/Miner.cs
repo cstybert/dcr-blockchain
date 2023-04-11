@@ -16,11 +16,13 @@ public class Miner : AbstractNode
 
     public override void HandleTransaction(Transaction tx)
     {
-        lock (_queue)
-        {
-            if (!_queue.Any(t => t.Id == tx.Id))
+        if (IsValidTransaction(tx)) {
+            lock (_queue)
             {
-                _queue.Enqueue(tx);
+                if (!_queue.Any(t => t.Id == tx.Id))
+                {
+                    _queue.Enqueue(tx);
+                }
             }
         }
     }
