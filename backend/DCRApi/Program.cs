@@ -1,6 +1,4 @@
 using DCR;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options; // Import the namespace for IOptions
 
 var address = "localhost";
 var frontendPort = 8080;
@@ -31,20 +29,14 @@ builder.Services.AddSingleton<NetworkClient>(networkClient);
 if (type == "miner") {
     Miner node = new Miner(loggerFactory.CreateLogger<Miner>(), networkClient);
     builder.Services.AddSingleton<AbstractNode>(node);
+    builder.Services.AddSingleton<Miner>(node);
     builder.Services.AddSingleton<MinerService>();
     builder.Services.AddHostedService<MinerService>(s => s.GetRequiredService<MinerService>());
-
 } else {
     FullNode node = new FullNode(loggerFactory.CreateLogger<FullNode>(), networkClient);
     builder.Services.AddSingleton<AbstractNode>(node);
+    builder.Services.AddSingleton<FullNode>(node);
 }
-// if (type == "miner") {
-//     builder.Services.AddSingleton<AbstractNode, Miner>();
-//     builder.Services.AddSingleton<MinerService>();
-//     builder.Services.AddHostedService<MinerService>(s => s.GetRequiredService<MinerService>());
-// } else {
-//     builder.Services.AddSingleton<AbstractNode, FullNode>();
-// }
 var app = builder.Build();
 app.UseAuthorization();
 app.MapControllers();

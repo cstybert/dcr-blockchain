@@ -32,6 +32,7 @@ public class BlockchainController : ControllerBase
     {
         return Ok(_blockchainSerializer.Serialize(_node.Blockchain.GetHead()));
     }
+
     [HttpGet("{index}")]
     public IActionResult GetBlock(int index)
     {
@@ -49,9 +50,7 @@ public class BlockchainController : ControllerBase
     [HttpPost("block")]
     public IActionResult ReceiveBlock(ShareBlock req)
     {
-        string blockJson = JsonConvert.SerializeObject(req.Block);
-        _node.ReceiveBlock(req);
-
+        _node.ReceiveBlock(req.SourceNode, req.Block);
         return Ok();
     }
 
