@@ -23,7 +23,7 @@ public class NetworkController : ControllerBase
     {
         _logger.LogTrace($"Received connect request: {req}");
         var clientNeighbors = DeepCopyNodes(_networkClient.ClientNeighbors);
-        await _networkClient.ConnectToPeerNetwork(req.Node);
+        await _networkClient.ConnectToNodeNetwork(req.Node, req.Neighbors);
 
         return Ok(clientNeighbors);
     }

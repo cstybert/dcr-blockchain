@@ -1,4 +1,3 @@
-using System.Net;
 using System.Text;
 using Newtonsoft.Json;
 
@@ -21,38 +20,9 @@ public class NetworkClient : IDisposable
         ClientNeighbors = new List<NetworkNode>();
     }
 
-    public async Task DiscoverNetwork()
-    {
-        // Query DNS Server for seed nodes
-        var seedNodes = await ConnectToDNSServer();
-
-        Console.WriteLine($"Connecting to seed node networks...");
-        await Connect(seedNodes);
-    }
-
-    private async Task Connect(List<NetworkNode> nodes)
-    {
-        foreach (var node in nodes) {
-            await ConnectToPeerNetwork(node);
-        }
-    }
-
-    public async Task DisconnectFromNetwork()
-    {
-        // Disconnect from all neighbors
-        foreach (var neighbor in ClientNeighbors) {
-            try
-            {
-                // RemoveNode(neighbor); TODO: Is removing neighbor from the list necessary? The list is wiped anyway..
-                await DisconnectFromNode(neighbor);
-            }
-            catch (Exception ex)
-            {
-                PrintError(ex);
-            }
-        }
-    }
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Network Connection Functions
+////////////////////////////////////////////////////////////////////////////////////////////////////////
     private async Task<List<NetworkNode>> ConnectToDNSServer()
     {
         Console.WriteLine("Connecting to DNS server...");
@@ -69,19 +39,46 @@ public class NetworkClient : IDisposable
         }
     }
 
-    public async Task ConnectToPeerNetwork(NetworkNode node)
+    public async Task DiscoverNetwork()
     {
+        // Query DNS Server for seed nodes
+        var seedNodes = await ConnectToDNSServer();
+
+        Console.WriteLine($"Connecting to seed node networks...");
+        foreach (var node in seedNodes) {
+            await ConnectToNodeNetwork(node);
+        }
+    }
+
+    // If we don't know the node neighbors, query the node for neighbors
+    public async Task ConnectToNodeNetwork(NetworkNode node)
+    {
+        Console.WriteLine("PEER NETWORK");
         if (AddNode(node)) {
             var peerNeighbors = await ConnectToNode(node);
-            Console.WriteLine($"Connected to node {node.URL}");
             foreach (var neighbor in peerNeighbors) {
                 if (AddNode(neighbor)) {
                     await ConnectToNode(neighbor); // TODO: Connect to neighbor's neighbors?
-                    Console.WriteLine($"Connected to node {neighbor.URL} (neighbor)");
                 }
             }
+            PrintNeighborList();
         }
     }
+
+    // If we already know the node neighbors, no need to fetch
+    public async Task ConnectToNodeNetwork(NetworkNode node, List<NetworkNode> nodeNeighbors)
+    {
+        Console.WriteLine("PEER NETWORK WITH NEIGHBORS");
+        if (AddNode(node)) {
+            foreach (var neighbor in nodeNeighbors) {
+                if (AddNode(neighbor)) {
+                    await ConnectToNode(neighbor); // TODO: Connect to neighbor's neighbors?
+                }
+            }
+            PrintNeighborList();
+        }
+    }
+
 
     private async Task<List<NetworkNode>> ConnectToNode(NetworkNode node) {
         var content = GetConnectionContent();
@@ -89,91 +86,24 @@ public class NetworkClient : IDisposable
             var peerResponse = await _httpClient.PostAsync($"{node.URL}/network/connect", content);
             var jsonString = await peerResponse.Content.ReadAsStringAsync();
             var peerNeighbors = _networkSerializer.Deserialize(jsonString);
+            Console.WriteLine($"Connected to node {node.URL}");
             return peerNeighbors;
         }
         catch (Exception ex) {
+            Console.WriteLine("HERE");
             PrintError(ex);
+            Console.WriteLine($"Could not connect to node {node.URL}");
             return new List<NetworkNode>();
         }
     }
 
-    // Get Blockchain from random neighbour
-    public async Task<Blockchain?> GetBlockchain()
+    public async Task DisconnectFromNetwork()
     {
-            if (ClientNeighbors.Count == 0)
-            {
-                Console.WriteLine("ClientNeighbours was 0");
-                return null;
-            }
-            Blockchain blockchain;
-            int i = 0;
-            while (i < 5) {   
-                Random r = new Random();
-                int neighbourIndex = r.Next(0, ClientNeighbors.Count - 1);
-                var neighbour = ClientNeighbors[neighbourIndex];
-                try {
-                    HttpResponseMessage res = await _httpClient.GetAsync($"{neighbour.URL}/blockchain/full");
-                    string responseContent = await res.Content.ReadAsStringAsync();
-                    blockchain = _blockchainSerializer.Deserialize(responseContent);
-                }
-                catch (Exception ex) {
-                    PrintError(ex);
-                    continue;
-                }
-                if (blockchain is not null)
-                {
-                    return blockchain;
-                }
-                i++;
-            }
-            return null;
-    }
-
-    // Get Blockchain from random neighbour
-    public async Task<GetHeadResponse?> GetHeadFromNeighbour()
-    {
-        if (ClientNeighbors.Count == 0)
-        {
-            return null;
+        // Disconnect from all neighbors
+        foreach (var neighbor in ClientNeighbors) {
+            // RemoveNode(neighbor); TODO: Is removing neighbor from the list necessary? The list is wiped anyway..
+            await DisconnectFromNode(neighbor);
         }
-        Block head;
-        int i = 0;
-        while (i < 5) {   
-            Random r = new Random();
-            int neighbourIndex = r.Next(0, ClientNeighbors.Count - 1);
-            var neighbour = ClientNeighbors[neighbourIndex];
-            try {
-                HttpResponseMessage res = await _httpClient.GetAsync($"{neighbour.URL}/blockchain/head");
-                string responseContent = await res.Content.ReadAsStringAsync();
-                head = _blockSerializer.Deserialize(responseContent);
-            }
-            catch (Exception ex) {
-                PrintError(ex);
-                continue;
-            }
-            if (head is not null)
-            {
-                return new GetHeadResponse(head, neighbour);
-            }
-            i++;
-        }
-        return null;
-    }
-
-    // Get Blockchain from random neighbour
-    public async Task<Block?> GetBlock(NetworkNode neighbour, int index)
-    {
-            Block block;
-            try {
-                HttpResponseMessage res = await _httpClient.GetAsync($"{neighbour.URL}/blockchain/{index}");
-                string responseContent = await res.Content.ReadAsStringAsync();
-                block = _blockSerializer.Deserialize(responseContent);
-            }
-            catch (Exception ex) {
-                PrintError(ex);
-                return null;
-            }
-            return block;
     }
 
     private async Task DisconnectFromNode(NetworkNode node) {
@@ -184,6 +114,60 @@ public class NetworkClient : IDisposable
         }
         catch (Exception ex) {
             PrintError(ex);
+        }
+    }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Blockchain Communication Functions
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Get Blockchain from random neighbour
+    public async Task<Blockchain?> GetBlockchain(NetworkNode node)
+    {
+        try
+        {
+            HttpResponseMessage res = await _httpClient.GetAsync($"{node.URL}/blockchain/full");
+            string responseContent = await res.Content.ReadAsStringAsync();
+            var blockchain = _blockchainSerializer.Deserialize(responseContent);
+            return blockchain;
+        }
+        catch (Exception ex)
+        {
+            PrintError(ex);
+            return null;
+        }
+    }
+
+    // Get head block from random neighbour
+    public async Task<Block?> GetHead(NetworkNode node)
+    {
+        try
+        {
+            HttpResponseMessage res = await _httpClient.GetAsync($"{node.URL}/blockchain/head");
+            string responseContent = await res.Content.ReadAsStringAsync();
+            var headBlock = _blockSerializer.Deserialize(responseContent);
+            return headBlock;
+        }
+        catch (Exception ex)
+        {
+            PrintError(ex);
+            return null;
+        }
+    }
+
+    // Get specific block from random neighbour
+    public async Task<Block?> GetBlock(NetworkNode node, int index)
+    {
+        try
+        {
+            HttpResponseMessage res = await _httpClient.GetAsync($"{node.URL}/blockchain/{index}");
+            string responseContent = await res.Content.ReadAsStringAsync();
+            var block = _blockSerializer.Deserialize(responseContent);
+            return block;
+        }
+        catch (Exception ex)
+        {
+            PrintError(ex);
+            return null;
         }
     }
 
@@ -220,6 +204,9 @@ public class NetworkClient : IDisposable
         }
     }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Helper Functions
+////////////////////////////////////////////////////////////////////////////////////////////////////////
     public bool AddNode(NetworkNode node)
     {
         if (ClientNeighbors.Count < 125 && !(ClientNode.URL == node.URL) && !ClientNeighbors.Any(n => n.URL == node.URL)) {
@@ -232,6 +219,20 @@ public class NetworkClient : IDisposable
     public void RemoveNode(NetworkNode node)
     {
         ClientNeighbors.RemoveAll(n => n.URL == node.URL);
+    }
+
+    private StringContent GetConnectionContent()
+    {
+        var connectNode = new ConnectNode(ClientNode, ClientNeighbors);
+        var nodeJson = _networkSerializer.Serialize(connectNode);
+        var content = new StringContent(nodeJson, Encoding.UTF8, "application/json");
+        return content;
+    }
+
+    public List<NetworkNode> GetRandomNeighbors(int numberNeighbors) {
+        var random = new Random();   
+        var randomNeighbors = ClientNeighbors.OrderBy(n => random.Next()).Take(numberNeighbors).ToList();
+        return randomNeighbors;
     }
 
     public void PrintNeighborList()
@@ -247,14 +248,6 @@ public class NetworkClient : IDisposable
         Console.ForegroundColor = ConsoleColor.Red;
         Console.WriteLine(ex.Message);
         Console.ResetColor();
-    }
-
-    private StringContent GetConnectionContent()
-    {
-        var connectNode = new ConnectNode(ClientNode, ClientNeighbors);
-        var nodeJson = _networkSerializer.Serialize(connectNode);
-        var content = new StringContent(nodeJson, Encoding.UTF8, "application/json");
-        return content;
     }
 
     // Make sure to timely dispose the HttpClient to avoid waiting for GC

@@ -5,10 +5,10 @@ namespace DCR;
 public class MinerService : BackgroundService
 {
     private readonly ILogger _logger;
-    private readonly AbstractNode _miner;
+    private readonly Miner _miner;
     
 
-    public MinerService(ILogger<MinerService> logger, AbstractNode miner)
+    public MinerService(ILogger<MinerService> logger, Miner miner)
     {
         _logger = logger;
         _miner = miner;

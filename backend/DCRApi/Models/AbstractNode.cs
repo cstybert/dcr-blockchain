@@ -1,9 +1,10 @@
 namespace DCR;
 
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 public abstract class AbstractNode
 {
+    protected int Id = new Random().Next();
+    private string _blockchainFilename { get; }
     public Blockchain Blockchain {get; init;}
     private readonly BlockchainSerializer _blockchainSerializer = new BlockchainSerializer();
     public  NetworkClient NetworkClient {get; init;}
@@ -11,139 +12,140 @@ public abstract class AbstractNode
     // even if it is not used in other node types than miner.
     public CancellationTokenSource miningCTSource = new CancellationTokenSource();
     public abstract void HandleTransaction(Transaction tx);
-    public abstract void Mine();
-    protected int Id = new Random().Next();
 
 
     public AbstractNode(NetworkClient networkClient)
     {
         NetworkClient = networkClient;
-        if (!System.IO.File.Exists($"blockchain{Id.ToString()}.json"))
-        {
-            Blockchain? blockchain = NetworkClient.GetBlockchain().Result;
-            CancellationToken mineCT = miningCTSource.Token;
-            if (blockchain is not null)
-            {
-                Console.WriteLine("Blockchain is not null");
-                Blockchain = blockchain;
-                Save();
-            }
-            else
-            {
-                Console.WriteLine("Blockchain is null");
-                Blockchain = new Blockchain(Settings.Difficulty);
-                Blockchain.Initialize(mineCT);
-                Save();
-            }
-        }
-        else
-        {
-            var blockJson = System.IO.File.ReadAllText($"blockchain{Id.ToString()}.json");
-            Blockchain = _blockchainSerializer.Deserialize(blockJson);
+        _blockchainFilename = $"blockchain{Id.ToString()}.json";
+        if (System.IO.File.Exists(_blockchainFilename)) {
+            // Load local blockchain and sync with neighbors
+            Console.WriteLine("Loading saved blockchain");
+            var blockchainJson = System.IO.File.ReadAllText(_blockchainFilename);
+            Blockchain = _blockchainSerializer.Deserialize(blockchainJson);
             ResyncBlockchain(Settings.NumberNeighbours);
-            Save();
+        } else {
+            var neighborBlockchain = GetRandomBlockchain(Settings.NumberNeighbours).Result;
+            if (neighborBlockchain is not null) {
+                // Full sync with random neighbors
+                Console.WriteLine("Synced with a neighbor blockchain");
+                Blockchain = neighborBlockchain;
+            } else {
+                // Create new blockchain
+                Console.WriteLine("Could not sync with neighbor blockchains, creating new");
+                Blockchain = new Blockchain(Settings.Difficulty);
+                Blockchain.Initialize(miningCTSource.Token);
+            }
         }
+        Save();
     }
 
-
-    protected async void ResyncBlockchain(int NumberNeighbours)
-    {
-        for (int i = 0; i < NumberNeighbours; i++)
+    private async Task<Blockchain?> GetRandomBlockchain(int numberNeighbors) {
+        var randomNeighbors = NetworkClient.GetRandomNeighbors(numberNeighbors);
+        foreach (var neighbor in randomNeighbors)
         {
-            GetHeadResponse? response = await NetworkClient.GetHeadFromNeighbour();
-            if (response is null)
-            {
+            var neighborBlockchain = await NetworkClient.GetBlockchain(neighbor);
+            if (neighborBlockchain is not null) {
+                return neighborBlockchain;
+            }
+        }
+        return null;
+    }
+
+    private async void ResyncBlockchain(int numberNeighbors)
+    {
+        var randomNeighbors = NetworkClient.GetRandomNeighbors(numberNeighbors);
+        foreach (var neighbor in randomNeighbors) {
+            var remoteHead = await NetworkClient.GetHead(neighbor);
+            if (remoteHead is null) {
                 continue;
             }
-            Block localHead = Blockchain.GetHead();
-            if (response.RemoteBlock.Index == localHead.Index)
+
+            var localHead = Blockchain.GetHead();
+            if (remoteHead.Index == localHead.Index) // Client blockchain is up to date
             {
                 return;
             }
-            if ((response.RemoteBlock.Index > Blockchain.GetHead().Index) && response.RemoteBlock.IsValid(Blockchain.Difficulty))
-            {   
-                Resync(response.Node, response.RemoteBlock);
+
+            if ((remoteHead.Index > localHead.Index) && remoteHead.IsValid(Blockchain.Difficulty)) // Client blockchain is behind
+            {
+                ResyncBlockchainWithNode(neighbor, remoteHead);
             }
-        }
+        }     
     }
 
-
-    protected void Save()
+    // TODO: Fix possible race condition.
+    // First check is done an instant before a new block is added.
+    // new block is added before mining task is cancelled
+    private async void ResyncBlockchainWithNode(NetworkNode node, Block remoteHead)
     {
-        var blockchainJson = _blockchainSerializer.Serialize(Blockchain);
-        using (StreamWriter sw = System.IO.File.CreateText($"blockchain{Id.ToString()}.json"))
-        {
-            sw.Write(blockchainJson);
-        }
-    }
-
-    private async void Resync(NetworkNode Node, Block RemoteHead)
-    {
-        if (!RemoteHead.IsValid(Blockchain.Difficulty))
-        {
-            return;
-        }
-        Block localHead = Blockchain.GetHead();
-        // possible race condition.
-        // this check is done an instant before a new block is added.
-        // new block is added before mining task is cancelled
-        if ((RemoteHead.Index == localHead.Index + 1) && RemoteHead.PreviousBlockHash == localHead.Hash)
+        var localHead = Blockchain.GetHead();
+        if ((remoteHead.Index == localHead.Index + 1) && remoteHead.PreviousBlockHash == localHead.Hash) // RemoteHead should be client's next block
         {
             miningCTSource.Cancel();
-            Blockchain.Append(RemoteHead);
-            ShareBlock(RemoteHead);
+            Blockchain.Append(remoteHead);
+            ShareBlock(remoteHead);
             Save();
             return;
         }
 
-        int LocalChainLength = Blockchain.Chain.Count();
-        Blockchain RemoteChain = new Blockchain(Blockchain.Difficulty);
-        RemoteChain.Append(RemoteHead);
-        for (int i = RemoteHead.Index; i >= 0; i--)
+        int localChainLength = Blockchain.Chain.Count();
+        var reconstructedChain = new Blockchain(Blockchain.Difficulty);
+        reconstructedChain.Append(remoteHead);
+        for (int i = remoteHead.Index; i >= 0; i--)
         {
-            Block? RemoteBlock = await NetworkClient.GetBlock(Node, i);
-            if (RemoteBlock is null || !RemoteChain.IsValid())
+            var remoteBlock = await NetworkClient.GetBlock(node, i);
+            if (remoteBlock is null || !reconstructedChain.IsValid())
             {
+                Console.WriteLine($"Failed to perform resync with neighbor {node.URL}");
                 return;
             }
-            RemoteChain.Prepend(RemoteBlock);
-            int IndexOfPreviousHash = Blockchain.Chain.FindIndex(b => b.Hash == RemoteBlock.PreviousBlockHash);
+            reconstructedChain.Prepend(remoteBlock);
+            var IndexOfPreviousHash = Blockchain.Chain.FindIndex(b => b.Hash == remoteBlock.PreviousBlockHash);
             // If no block has hash equal to remote previousblockhash request another block
             if (IndexOfPreviousHash == -1)
             {
                 continue;
             }
-            int LengthOfReplacing = IndexOfPreviousHash + RemoteChain.Chain.Count();
-            if (LengthOfReplacing <= LocalChainLength)
+            var lengthOfReplacing = IndexOfPreviousHash + reconstructedChain.Chain.Count();
+            if (lengthOfReplacing <= localChainLength)
             {
                 return;
             }
             miningCTSource.Cancel();
             // Delete all blocks from the Index of PreviousBlockHash + 1 and to the end of the chain
             Blockchain.RemoveRange(IndexOfPreviousHash + 1, Blockchain.Chain.Count() - IndexOfPreviousHash + 1);
-            Blockchain.Append(RemoteChain.Chain);
+            Blockchain.Append(reconstructedChain.Chain);
             ShareBlock(Blockchain.GetHead());
             Save();
         }
     }
 
-    // Send newly mined block to all neighbours
     protected void ShareBlock(Block block)
     {
-        string blockJson = JsonConvert.SerializeObject(block);
+        var blockJson = JsonConvert.SerializeObject(block);
         Console.WriteLine($"Broadcasting block {blockJson}");
         NetworkClient.BroadcastBlock(block);
     }
 
-    public void ReceiveBlock(ShareBlock req)
+    public void ReceiveBlock(NetworkNode sender, Block receivedBlock)
     {
         lock(Blockchain)
         {
-            if (req.Block.Index <= Blockchain.GetHead().Index || !req.Block.IsValid(Blockchain.Difficulty))
+            if (receivedBlock.Index <= Blockchain.GetHead().Index || !receivedBlock.IsValid(Blockchain.Difficulty))
             {
                 return;
             }
-            Resync(req.Sender, req.Block);
+            ResyncBlockchainWithNode(sender, receivedBlock);
+        }
+    }
+
+    protected void Save()
+    {
+        var blockchainJson = _blockchainSerializer.Serialize(Blockchain);
+        using (StreamWriter sw = System.IO.File.CreateText(_blockchainFilename))
+        {
+            sw.Write(blockchainJson);
         }
     }
 }

@@ -5,17 +5,10 @@ public class FullNode : AbstractNode
 {
     private readonly ILogger<FullNode> _logger;
     private readonly BlockchainSerializer _blockchainSerializer = new BlockchainSerializer();
-    public FullNode(ILogger<FullNode> logger, NetworkClient networkClient) 
-    : base(networkClient)
+    public FullNode(ILogger<FullNode> logger, NetworkClient networkClient): base(networkClient)
     {
         _logger = logger;
     }
-
-    public override void Mine()
-    {
-        throw new NotImplementedException();
-    }
-
 
     public override void HandleTransaction(Transaction tx)
     {

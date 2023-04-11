@@ -3,20 +3,20 @@ namespace Models
 {
     public class Graph
     {
-        public string ID { get; set; }
+        public string Id { get; set; }
         public List<Activity> Activities { get; set; }
         public List<Relation> Relations { get; set; }
 
         public Graph()
         {
-            ID = Guid.NewGuid().ToString();
+            Id = Guid.NewGuid().ToString();
             Activities = new List<Activity>();
             Relations = new List<Relation>();
         }
 
         public Graph(List<Activity> activities, List<Relation> relations)
         {
-            ID = Guid.NewGuid().ToString();
+            Id = Guid.NewGuid().ToString();
             Activities = activities;
             Relations = relations;
         }
@@ -24,7 +24,7 @@ namespace Models
         [JsonConstructor]
         private Graph(string id, List<Activity> activities, List<Relation> relations)
         {
-            ID = id;
+            Id = id;
             Activities = activities;
             Relations = relations;
         }

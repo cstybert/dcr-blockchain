@@ -49,26 +49,17 @@ public class Blockchain
 
         for (int i = 1; i < _chain.Count; i++)
         {
-            if (!(PreviousBlockHashValid(i) && CurrentBlockValid(i))) 
+            if (!(PreviousBlockHashValid(i) && _chain[i].IsValid(_difficulty))) 
             { 
                 return false; 
             }
         }
-
         return true;
     }
 
     private bool PreviousBlockHashValid(int i)
     {
         return _chain[i].PreviousBlockHash == _chain[i - 1].Hash;
-    }
-
-    private bool CurrentBlockValid(int i)
-    {
-        string leadingzeroes = new string('0', _difficulty);
-        // Check leading zeroes and hash are correct
-        return  (_chain[i].Hash.Substring(0, _difficulty) == leadingzeroes) 
-             && (_chain[i].Hash == _chain[i].GetHash());
     }
 
     public Block MineTransactions(List<Transaction> tx, CancellationToken stoppingToken) 
@@ -113,7 +104,7 @@ public class Blockchain
         {
             foreach (Transaction transaction in Enumerable.Reverse(block.Transactions))
             {
-                if (transaction.Graph.ID == id) 
+                if (transaction.Graph.Id == id) 
                 {
                     return transaction.Graph;
                 }

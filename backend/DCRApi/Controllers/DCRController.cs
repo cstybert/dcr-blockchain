@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Models;
 using Business;
 
@@ -61,7 +60,7 @@ public class DCRController : ControllerBase
         Transaction tx = CreateUpdateGraphTransaction(graph, req.Actor, req.ExecutingActivity);
         _node.HandleTransaction(tx);
         _logger.LogInformation($"Block validity: {_node.Blockchain.IsValid()}");
-        _logger.LogInformation($"Updated graph {graph.ID}");
+        _logger.LogInformation($"Updated graph {graph.Id}");
         return Ok("Transaction added");
     }
 
