@@ -13,12 +13,12 @@ public class NetworkSerializer
         return JsonConvert.SerializeObject(nodes, Formatting.Indented);
     }
 
-    public string Serialize(ConnectNode connectNode)
+    public string Serialize(ConnectRequest connectNode)
     {
         return JsonConvert.SerializeObject(connectNode, Formatting.Indented);
     }
 
-    public string Serialize(ShareBlock shareBlock)
+    public string Serialize(ShareBlockRequest shareBlock)
     {
         return JsonConvert.SerializeObject(shareBlock, Formatting.Indented);
     }

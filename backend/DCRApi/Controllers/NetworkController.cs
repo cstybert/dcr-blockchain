@@ -19,7 +19,7 @@ public class NetworkController : ControllerBase
     }
 
     [HttpPost("connect")]
-    public async Task<IActionResult> Connect([FromBody] ConnectNode req)
+    public async Task<IActionResult> Connect([FromBody] ConnectRequest req)
     {
         _logger.LogTrace($"Received connect request: {req}");
         var clientNeighbors = DeepCopyNodes(_networkClient.ClientNeighbors);
@@ -29,7 +29,7 @@ public class NetworkController : ControllerBase
     }
 
     [HttpPost("disconnect")]
-    public IActionResult Disconnect([FromBody] ConnectNode req)
+    public IActionResult Disconnect([FromBody] ConnectRequest req)
     {
         _logger.LogTrace($"Received disconnect request: {req}");
         _networkClient.RemoveNode(req.Node);

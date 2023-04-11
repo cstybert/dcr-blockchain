@@ -37,7 +37,7 @@ public class DCRController : ControllerBase
     }
     
     [HttpPost("create")]
-    public IActionResult Post([FromBody] CreateGraph req)
+    public IActionResult Post([FromBody] CreateGraphRequest req)
     {
         _logger.LogInformation($"Adding graph to blockchain : {req}");
         Graph graph = _graphCreator.Create(req.Activities, req.Relations);
@@ -49,7 +49,7 @@ public class DCRController : ControllerBase
     }
 
     [HttpPut("update/{id}")]
-    public IActionResult Put(string id, ExecuteActivity req)
+    public IActionResult Put(string id, ExecuteActivityRequest req)
     {
         _logger.LogInformation($"Executing activity {req.ExecutingActivity} in graph {id}");
         Graph graph = _node.Blockchain.GetGraph(id)!;

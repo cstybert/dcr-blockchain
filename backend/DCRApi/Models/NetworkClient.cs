@@ -53,7 +53,6 @@ public class NetworkClient : IDisposable
     // If we don't know the node neighbors, query the node for neighbors
     public async Task ConnectToNodeNetwork(NetworkNode node)
     {
-        Console.WriteLine("PEER NETWORK");
         if (AddNode(node)) {
             var peerNeighbors = await ConnectToNode(node);
             foreach (var neighbor in peerNeighbors) {
@@ -68,7 +67,6 @@ public class NetworkClient : IDisposable
     // If we already know the node neighbors, no need to fetch
     public async Task ConnectToNodeNetwork(NetworkNode node, List<NetworkNode> nodeNeighbors)
     {
-        Console.WriteLine("PEER NETWORK WITH NEIGHBORS");
         if (AddNode(node)) {
             foreach (var neighbor in nodeNeighbors) {
                 if (AddNode(neighbor)) {
@@ -90,7 +88,6 @@ public class NetworkClient : IDisposable
             return peerNeighbors;
         }
         catch (Exception ex) {
-            Console.WriteLine("HERE");
             PrintError(ex);
             Console.WriteLine($"Could not connect to node {node.URL}");
             return new List<NetworkNode>();
@@ -172,8 +169,8 @@ public class NetworkClient : IDisposable
     }
 
     public void BroadcastBlock(Block block) {
-        var connectNode = new ShareBlock(block, ClientNode);
-        var shareJson = _networkSerializer.Serialize(connectNode);
+        var shareBlockRequest = new ShareBlockRequest(block, ClientNode);
+        var shareJson = _networkSerializer.Serialize(shareBlockRequest);
         var content = new StringContent(shareJson, Encoding.UTF8, "application/json");
         foreach (var neighbor in ClientNeighbors) {
             try
@@ -223,8 +220,8 @@ public class NetworkClient : IDisposable
 
     private StringContent GetConnectionContent()
     {
-        var connectNode = new ConnectNode(ClientNode, ClientNeighbors);
-        var nodeJson = _networkSerializer.Serialize(connectNode);
+        var connectRequest = new ConnectRequest(ClientNode, ClientNeighbors);
+        var nodeJson = _networkSerializer.Serialize(connectRequest);
         var content = new StringContent(nodeJson, Encoding.UTF8, "application/json");
         return content;
     }

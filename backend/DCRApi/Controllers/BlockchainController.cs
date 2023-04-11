@@ -48,7 +48,7 @@ public class BlockchainController : ControllerBase
     }
 
     [HttpPost("block")]
-    public IActionResult ReceiveBlock(ShareBlock req)
+    public IActionResult ReceiveBlock(ShareBlockRequest req)
     {
         _node.ReceiveBlock(req.SourceNode, req.Block);
         return Ok();
