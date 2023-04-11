@@ -50,7 +50,14 @@ public class BlockchainController : ControllerBase
     [HttpPost("block")]
     public IActionResult ReceiveBlock(ShareBlockRequest req)
     {
-        _node.ReceiveBlock(req.SourceNode, req.Block);
+        Console.WriteLine($"Received Block {req.Block.Hash}");
+        if (!_node.HandledBlocks.Any(b => b.Hash == req.Block.Hash))
+        {
+            _node.ReceiveBlock(req.SourceNode, req.Block);
+            _node.HandledBlocks.Add(req.Block);
+        } else {
+            Console.WriteLine("Block has already been handled (ignore).");
+        }
         return Ok();
     }
 
@@ -58,7 +65,13 @@ public class BlockchainController : ControllerBase
     public IActionResult ReceiveTransaction(Transaction transaction)
     {
         Console.WriteLine($"Received Transaction {transaction.Id}");
-        _node.HandleTransaction(transaction);
+        if (!_node.HandledTransactions.Any(tx => tx.Id == transaction.Id))
+        {
+            _node.HandleTransaction(transaction);
+            _node.HandledTransactions.Add(transaction);
+        } else {
+            Console.WriteLine("Transaction has already been handled (ignore).");
+        }
         return Ok();
     }
 }
