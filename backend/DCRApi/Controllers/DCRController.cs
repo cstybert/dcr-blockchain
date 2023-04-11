@@ -45,7 +45,7 @@ public class DCRController : ControllerBase
         _node.HandleTransaction(tx);
         _logger.LogInformation($"Block validity: {_node.Blockchain.IsValid()}");
         _logger.LogInformation($"Created Transaction");
-        return Ok("Transaction added");
+        return Ok(graph);
     }
 
     [HttpPut("update/{id}")]

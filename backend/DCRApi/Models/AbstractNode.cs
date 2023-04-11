@@ -147,16 +147,14 @@ public abstract class AbstractNode
 
     protected bool IsValidTransaction(Transaction tx) {
         if (tx.Action == Action.Create) {
-            Console.WriteLine("VALID CREATE: " + tx.Graph.Id != "");
             return tx.Graph.Id != "";
         } else {
             var oldGraph = Blockchain.GetGraph(tx.Graph.Id)!;
             if (oldGraph is not null) {
+                var graphSerializer = new GraphSerializer();
                 var expectedUpdatedGraph = _graphExecutor.Execute(oldGraph, tx.EntityTitle);
-                Console.WriteLine("VALID UPDATE: " + tx.Graph.EqualsGraph(expectedUpdatedGraph));
                 return tx.Graph.EqualsGraph(expectedUpdatedGraph);
             }
-            Console.WriteLine("CANNOT UPDATE NON-EXISTING GRAPH");
             return false;
         }
     }

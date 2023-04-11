@@ -40,7 +40,7 @@ namespace Models
             if (otherGraph is null) return false;
             return  (Id == otherGraph.Id) &&
                     (Relations.SequenceEqual(otherGraph.Relations)) &&
-                    (!Activities.SequenceEqual(otherGraph.Activities)) &&
+                    (Activities.SequenceEqual(otherGraph.Activities)) &&
                     (Accepting == otherGraph.Accepting);
         }
     }

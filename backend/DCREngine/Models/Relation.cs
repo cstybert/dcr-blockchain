@@ -32,5 +32,14 @@ namespace Models
             var trgt = Target != null ? Target : "<none>";
             return $"{src}{typ}{trgt}";
         }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null || GetType() != obj.GetType())
+                return false;
+
+            Relation other = (Relation)obj;
+            return (Type == other.Type) && (Source == other.Source) && (Target == other.Target);
+        }
     }
 }
