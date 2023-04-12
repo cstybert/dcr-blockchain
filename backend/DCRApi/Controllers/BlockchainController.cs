@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.SignalR;
 
 namespace DCR;
 [ApiController]
@@ -11,13 +12,15 @@ public class BlockchainController : ControllerBase
     private readonly NetworkClient _networkClient;
     private readonly AbstractNode _node;
     private readonly BlockchainSerializer _blockchainSerializer;
+    private readonly IHubContext<BlockHub> _blockHubContext;
 
-    public BlockchainController(ILogger<BlockchainController> logger, NetworkClient networkClient, AbstractNode node)
+    public BlockchainController(ILogger<BlockchainController> logger, NetworkClient networkClient, AbstractNode node, IHubContext<BlockHub> blockHubContext)
     {
         _logger = logger;
         _node = node;
         _networkClient = networkClient;
         _blockchainSerializer = new BlockchainSerializer();
+        _blockHubContext = blockHubContext;
     }
 
     [HttpGet("full")]
@@ -51,6 +54,7 @@ public class BlockchainController : ControllerBase
     public IActionResult ReceiveBlock(ShareBlockRequest req)
     {
         _node.ReceiveBlock(req.SourceNode, req.Block);
+        _blockHubContext.Clients.All.SendAsync("update", "New block received");
         return Ok();
     }
 

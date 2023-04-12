@@ -33,6 +33,7 @@
 import "./HomeView.scss";
 import axios from "../js/axios.config"
 import TableComponent from "./TableComponent.vue";
+import * as signalR from '@aspnet/signalr';
 
 export default {
   name: 'HomeView',
@@ -136,7 +137,26 @@ export default {
           console.log(err);
       });
     }
-  }
+  },
+
+  created() {
+    // create a new SignalR connection
+    this.connection = new signalR.HubConnectionBuilder()
+      .withUrl('http://localhost:4300/block-hub', {
+        skipNegotiation: true,
+        transport: signalR.HttpTransportType.WebSockets,
+        withCredentials: false // allow CORS
+      }) // set the URL of the SignalR hub
+      .build();
+
+    // listen for the 'update' event from the hub
+    this.connection.on('update', message => {
+      console.log("RECEIVED AT FRONTEND: "+message);
+    });
+
+    // start the connection
+    this.connection.start().catch(err => console.error(err));
+  },
 }
 </script>
 
