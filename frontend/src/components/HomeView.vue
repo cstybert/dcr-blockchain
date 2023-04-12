@@ -151,7 +151,11 @@ export default {
 
     // listen for the 'update' event from the hub
     this.connection.on('update', message => {
-      console.log("RECEIVED AT FRONTEND: "+message);
+      // TODO: Fetch new graph status of this.searchId
+      console.log("RECEIVED AT FRONTEND");
+      const block = JSON.parse(message);
+      console.log(block);
+      // TODO: Loop over transactions, compare with Vuex pendingTransactions, remove from pendingTransactions if in block. This updates the list of pendingTransactions.
     });
 
     // start the connection

@@ -54,7 +54,7 @@ public class BlockchainController : ControllerBase
     public IActionResult ReceiveBlock(ShareBlockRequest req)
     {
         _node.ReceiveBlock(req.SourceNode, req.Block);
-        _blockHubContext.Clients.All.SendAsync("update", "New block received");
+        _blockHubContext.Clients.All.SendAsync("update", _blockchainSerializer.Serialize(req.Block));
         return Ok();
     }
 
