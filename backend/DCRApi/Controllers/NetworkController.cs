@@ -21,7 +21,8 @@ public class NetworkController : ControllerBase
     [HttpPost("connect")]
     public async Task<IActionResult> Connect([FromBody] ConnectRequest req)
     {
-        _logger.LogTrace($"Received connect request: {req}");
+        _logger.LogDebug($"Received connect request: {req}");
+        _logger.LogInformation($"Received connect request: {req}");
         var clientNeighbors = DeepCopyNodes(_networkClient.ClientNeighbors);
         await _networkClient.ConnectToNodeNetwork(req.Node, req.Neighbors);
 
@@ -31,7 +32,8 @@ public class NetworkController : ControllerBase
     [HttpPost("disconnect")]
     public IActionResult Disconnect([FromBody] ConnectRequest req)
     {
-        _logger.LogTrace($"Received disconnect request: {req}");
+        _logger.LogDebug($"Received disconnect request: {req}");
+        _logger.LogInformation($"Received disconnect request: {req}");
         _networkClient.RemoveNode(req.Node);
         Console.WriteLine($"Disconnected from node {req.Node.URL}");
 

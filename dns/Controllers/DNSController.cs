@@ -17,6 +17,7 @@ public class DNSController : ControllerBase
     public IActionResult Get()
     {
         _logger.LogTrace($"Sending neighbors");
+        _logger.LogInformation($"Sending neighbors");
         var network = System.IO.File.ReadAllText("network.json");
         return Ok(network);
     }

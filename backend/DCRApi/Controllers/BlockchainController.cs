@@ -23,6 +23,8 @@ public class BlockchainController : ControllerBase
     [HttpGet("full")]
     public IActionResult GetBlockchain()
     {
+        _logger.LogDebug($"Received request for full blockchain");
+        _logger.LogInformation($"Received request for full blockchain");
         string blockchainJson = _blockchainSerializer.Serialize(_node.Blockchain);
         return Ok(blockchainJson);
     }
@@ -30,12 +32,16 @@ public class BlockchainController : ControllerBase
     [HttpGet("head")]
     public IActionResult GetHeadBlock()
     {
+        _logger.LogDebug($"Received Head request");
+        _logger.LogInformation($"Received Head request");
         return Ok(_blockchainSerializer.Serialize(_node.Blockchain.GetHead()));
     }
 
     [HttpGet("{index}")]
     public IActionResult GetBlock(int index)
     {
+        _logger.LogDebug($"Received Block request {index}");
+        _logger.LogInformation($"Received Block request {index}");
         try 
         {
             return Ok(_blockchainSerializer.Serialize(_node.Blockchain.Chain[index]));
@@ -50,6 +56,8 @@ public class BlockchainController : ControllerBase
     [HttpPost("block")]
     public IActionResult ReceiveBlock(ShareBlockRequest req)
     {
+        _logger.LogDebug($"Received Block {req.Block.Hash}");
+        _logger.LogInformation($"Received Block {req.Block.Hash}");
         _node.ReceiveBlock(req.SourceNode, req.Block);
         return Ok();
     }
@@ -57,7 +65,8 @@ public class BlockchainController : ControllerBase
     [HttpPost("transaction")]
     public IActionResult ReceiveTransaction(Transaction transaction)
     {
-        Console.WriteLine($"Received Transaction {transaction.Id}");
+        _logger.LogDebug($"Received Transaction {transaction.Id}");
+        _logger.LogInformation($"Received Transaction {transaction.Id}");
         _node.HandleTransaction(transaction);
         return Ok();
     }

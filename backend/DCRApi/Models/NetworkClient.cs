@@ -55,9 +55,11 @@ public class NetworkClient : IDisposable
     {
         if (AddNode(node)) {
             var peerNeighbors = await ConnectToNode(node);
-            foreach (var neighbor in peerNeighbors) {
-                if (AddNode(neighbor)) {
-                    await ConnectToNode(neighbor); // TODO: Connect to neighbor's neighbors?
+            if (peerNeighbors is not null) {
+                foreach (var neighbor in peerNeighbors) {
+                    if (AddNode(neighbor)) {
+                        await ConnectToNode(neighbor); // TODO: Connect to neighbor's neighbors?
+                    }
                 }
             }
             PrintNeighborList();
@@ -77,8 +79,7 @@ public class NetworkClient : IDisposable
         }
     }
 
-
-    private async Task<List<NetworkNode>> ConnectToNode(NetworkNode node) {
+    public async Task<List<NetworkNode>> ConnectToNode(NetworkNode node) {
         var content = GetConnectionContent();
         try {
             var peerResponse = await _httpClient.PostAsync($"{node.URL}/network/connect", content);
@@ -172,15 +173,19 @@ public class NetworkClient : IDisposable
         var shareBlockRequest = new ShareBlockRequest(block, ClientNode);
         var shareJson = _networkSerializer.Serialize(shareBlockRequest);
         var content = new StringContent(shareJson, Encoding.UTF8, "application/json");
+        Console.WriteLine("I AM " + ClientNode.URL);
         foreach (var neighbor in ClientNeighbors) {
+            Console.WriteLine("BROADCASTING BLOCK TO " + neighbor.URL);
             try
             {
                 _httpClient.PostAsync($"{neighbor.URL}/blockchain/block", content);
+                Console.WriteLine("YAY");
             }
             catch (Exception ex)
             {
                 // TODO: Determine if we should remove unreliable neighbor
                 PrintError(ex);
+                Console.WriteLine("NAY");
             }
         }
     }
