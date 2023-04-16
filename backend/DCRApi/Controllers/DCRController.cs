@@ -10,13 +10,13 @@ public class DCRController : ControllerBase
 {
 
     private readonly ILogger<DCRController> _logger;
-    private readonly AbstractNode _node;
+    private readonly FullNode _node;
     private readonly BlockchainSerializer _blockchainSerializer = new BlockchainSerializer();
     private readonly GraphSerializer _graphSerializer = new GraphSerializer();
     private readonly GraphCreator _graphCreator = new GraphCreator();
     private readonly GraphExecutor _graphExecutor = new GraphExecutor();
 
-    public DCRController(ILogger<DCRController> logger, AbstractNode node)
+    public DCRController(ILogger<DCRController> logger, FullNode node)
     {
         _node = node;
         _logger = logger;
@@ -35,7 +35,13 @@ public class DCRController : ControllerBase
         }
         return NotFound("Could not find graph");
     }
-    
+
+    [HttpGet("pending")]
+    public IActionResult GetPendingTransactions()
+    {
+        return Ok(_node.PendingTransactions);
+    }
+
     [HttpPost("create")]
     public IActionResult Post([FromBody] CreateGraphRequest req)
     {
@@ -45,6 +51,7 @@ public class DCRController : ControllerBase
         _node.HandleTransaction(tx);
         _logger.LogInformation($"Block validity: {_node.Blockchain.IsValid()}");
         _logger.LogInformation($"Created Transaction");
+        _node.AddPendingTransaction(tx);
         return Ok(graph);
     }
 
@@ -61,6 +68,7 @@ public class DCRController : ControllerBase
         _node.HandleTransaction(tx);
         _logger.LogInformation($"Block validity: {_node.Blockchain.IsValid()}");
         _logger.LogInformation($"Updated graph {graph.Id}");
+        _node.AddPendingTransaction(tx);
         return Ok("Transaction added");
     }
 

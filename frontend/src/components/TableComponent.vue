@@ -10,31 +10,31 @@
       </thead>
       <tbody>
         <tr v-for="(row, i) in data" :key="i">
-          <td v-for="({title, type}, i) in headers" :key="i">
+          <td v-for="({title, mapping, type}, i) in headers" :key="i">
             <!-- Text fields (e.g. Title) -->
             <input v-if="type == 'text'"
               type="text"
-              :disabled="executeMode"
-              v-model="row[title.toLowerCase()]" />
+              :disabled="disabled == true ? disabled : executeMode"
+              v-model="row[mapping]" />
 
             <!-- Boolean fields (e.g. Pending) -->
             <input v-else-if="type == 'checkbox'"
               type="checkbox"
-              :disabled="executeMode &&
+              :disabled="disabled == true ? disabled : (executeMode &&
                          (!row['enabled'] ||
-                          title != 'Executed' ||
-                          title == 'Executed' && (row['executed'] && !row['pending']))"
+                         mapping != 'executed' ||
+                         mapping == 'executed' && (row['executed'] && !row['pending'])))"
               @click="executeMode ? executeActivity(row['title']) : null"
-              v-model="row[title.toLowerCase()]" />
+              v-model="row[mapping]" />
             
             <!-- Select activity fields (e.g. Source) -->
-            <select v-else-if="type == 'select activity'" :disabled="executeMode" v-model="row[title.toLowerCase()]">
+            <select v-else-if="type == 'select activity'" :disabled="disabled == true ? disabled : executeMode" v-model="row[title.toLowerCase()]">
                 <option disabled value="">Select an activity</option>
                 <option v-for="(activityTitle, i) in activityTitles" :key="i"> {{ activityTitle }} </option>
             </select>
 
             <!-- Select relation field (e.g. Type) -->
-            <select v-else-if="type == 'select relation'" :disabled="executeMode" v-model="row[title.toLowerCase()]">
+            <select v-else-if="type == 'select relation'" :disabled="disabled == true ? disabled : executeMode" v-model="row[title.toLowerCase()]">
               <option disabled value="">Select a relation type</option>
               <option :value="id" v-for="({id}, i) in relationTypes" :key="i"> {{ id }} </option>
             </select>
@@ -70,6 +70,10 @@ export default {
     executeMode: {
       type: Boolean,
       required: false,
+      default: false
+    },
+    disabled: {
+      type: Boolean,
       default: false
     }
   },

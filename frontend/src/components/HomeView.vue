@@ -4,7 +4,7 @@
     <div class="top-controls">
       <input class="search-input" type="text" placeholder="Graph ID" v-model="searchId" />
       <div class="button-container">
-        <button class="submit-button" :disabled="searchId == ''" @click="searchGraph"> Find graph </button>
+        <button class="submit-button" :disabled="searchId == ''" @click="searchGraph(searchId)"> Find graph </button>
         or
         <button class="submit-button" @click="newGraph"> New graph </button>
       </div>
@@ -15,17 +15,25 @@
     <div class="tables-container">
       <div class="table-container">
         <h2>Activities</h2>
-        <TableComponent :headers="activityHeaders" :data="activities" :executeMode="executeMode" @executeActivity="executeActivity"/>
+        <TableComponent :headers="activityHeaders" :data="activities" :executeMode="executeMode" @executeActivity="executeActivity" :disabled="hasPendingGraphCreation" /> <!-- Add disabled="hasPendingTransactions"? -->
         <button class="submit-button" :disabled="executeMode" @click="addActivity"> Add activity </button>
       </div>
 
       <div class="table-container">
         <h2>Relations</h2>
-        <TableComponent :headers="relationHeaders" :data="relations" :activityTitles="activityTitles" :relationTypes="relationTypes" :executeMode="executeMode"/>
+        <TableComponent :headers="relationHeaders" :data="relations" :activityTitles="activityTitles" :relationTypes="relationTypes" :executeMode="executeMode" :disabled="hasPendingGraphCreation" /> <!-- Add disabled="hasPendingTransactions"? -->
         <button class="submit-button" :disabled="executeMode" @click="addRelation"> Add relation </button>
       </div>
     </div>
     <button class="submit-button" @click="createGraph" :hidden="executeMode"> Create graph </button>
+
+    <div class="tables-container">
+      <div class="table-container">
+        <h2>Pending Transactions</h2>
+        <TableComponent :headers="pendingTransactionsHeaders" :data="pendingTransactions" :disabled="true"></TableComponent>
+      </div>
+    </div>
+    
   </div>
 </template>
 
@@ -44,14 +52,15 @@ export default {
   data() {
     return {
       searchId: "",
+      currentGraphId: "",
       executeMode: false,
       isAccepting: false,
       activityHeaders: [
-        {title: "Title", type: "text"},
-        {title: "Pending", type: "checkbox"},
-        {title: "Included", type: "checkbox"},
-        {title: "Executed", type: "checkbox"},
-        {title: "Enabled", type: "checkbox"}],
+        {title: "Title", mapping: "title", type: "text"},
+        {title: "Pending", mapping: "pending", type: "checkbox"},
+        {title: "Included", mapping: "included", type: "checkbox"},
+        {title: "Executed", mapping: "executed", type: "checkbox"},
+        {title: "Enabled", mapping: "enabled", type: "checkbox"}],
       activities: [
         { title: "Select papers", pending: true, included: true, executed: false, enabled: true },
         { title: "Write introduction", pending: true, included: true, executed: false, enabled: false },
@@ -59,9 +68,9 @@ export default {
         { title: "Write conclusion", pending: true, included: true, executed: false, enabled: false },
       ],
       relationHeaders: [
-        {title: "Source", type: "select activity"},
-        {title: "Type", type: "select relation"},
-        {title: "Target", type: "select activity"}
+        {title: "Source", mapping: "source", type: "select activity"},
+        {title: "Type", mapping: "type", type: "select relation"},
+        {title: "Target", mapping: "target", type: "select activity"}
       ],
       relations: [
         { source: "Select papers", type: 2, target: "Select papers" },
@@ -77,22 +86,37 @@ export default {
         {id: 2, text: '-->% (excludes)'},
         {id: 3, text: '-->+ (includes)'},
       ],
+      pendingTransactionsHeaders: [
+        {title: "Graph ID", mapping: "graphId", type: "text"},
+        {title: "Action", mapping: "action", type: "text"},
+        {title: "Executed Activity", mapping: "activity", type: "text"}
+      ],
+      pendingTransactions: []
     }
   },
 
   computed: {
     activityTitles() {
       return this.activities.map(item => item.title);
+    },
+
+    hasPendingGraphCreation() {
+      return this.pendingTransactions.some(transaction => (transaction['graphId'] == this.currentGraphId) && transaction['action'] == "Created graph");
+    },
+
+    hasPendingTransactions() {
+      return this.pendingTransactions.some(transaction => transaction['graphId'] == this.currentGraphId);
     }
   },
 
   methods: {
-    async searchGraph() {
-      await axios.get(`DCR/${this.searchId}`).then(res => {
+    async searchGraph(id) {
+      await axios.get(`DCR/${id}`).then(res => {
         if (res.status == 200) {
           this.activities = res.data['activities'];
           this.relations = res.data['relations'];
           this.isAccepting = res.data['accepting'];
+          this.currentGraphId = this.searchId;
           this.executeMode = true;
         }
       }).catch(err => {
@@ -103,6 +127,8 @@ export default {
     newGraph() {
       this.activities = [{ title: "", pending: false, included: true, executed: false, enabled: true }];
       this.relations = [{ source: "", type: null, target: "" }];
+      this.searchId = "";
+      this.currentGraphId = "";
       this.executeMode = false;
     },
 
@@ -114,13 +140,31 @@ export default {
       this.relations.push({ source: "", type: null, target: "" });
     },
 
+    async getPendingTransactions() {
+      await axios.get(`DCR/pending`).then(res => {
+        if (res.status == 200) {
+          const updatedTransactions = this.formatPendingTransactions(res.data);
+          // If there is a pending transaction for current graph, and updated transactions resolves this transaction, fetch updated graph automatically
+           if (this.pendingTransactions.some(pt => (pt['graphId'] == this.currentGraphId) && !updatedTransactions.some(ut => ut['graphId'] == pt['graphId']))) {
+            this.searchGraph(this.currentGraphId);
+          }
+          this.pendingTransactions = updatedTransactions;
+        }
+      }).catch(err => {
+          console.log(err);
+      });
+    },
+
     async createGraph() {
       const payload = {"Actor": "Foo", "Activities": this.activities, "Relations": this.relations};
       await axios.post(`DCR/create`, payload).then(res => {
         if (res.status == 200) {
           this.searchId = res.data['id'];
+          this.currentGraphId = res.data['id'];
           this.isAccepting = res.data['accepting'];
           this.executeMode = true;
+
+          this.getPendingTransactions();
         }
       }).catch(err => {
           console.log(err);
@@ -129,36 +173,39 @@ export default {
 
     async executeActivity(title) {
       const payload = {'actor': "1", 'executingActivity': title};
-      await axios.put(`DCR/update/${this.searchId}`, payload).then(res => {
+      await axios.put(`DCR/update/${this.currentGraphId}`, payload).then(res => {
         if (res.status == 200) {
-          console.log("Executed activity");
+          this.getPendingTransactions();
         }
       }).catch(err => {
           console.log(err);
       });
+    },
+
+    formatPendingTransactions(transactions) {
+      return transactions.map((transaction) => ({
+        'graphId': transaction['graph']['id'],
+        'action': transaction['entityTitle'] ? 'Executed activity' : 'Created graph',
+        'activity': transaction['entityTitle']
+      }));
     }
   },
 
   created() {
-    // create a new SignalR connection
+    this.getPendingTransactions();
+
     this.connection = new signalR.HubConnectionBuilder()
-      .withUrl('http://localhost:4300/block-hub', {
+      .withUrl(`http://localhost:${process.env.VUE_APP_BACKEND}/pending-transactions-hub`, {
         skipNegotiation: true,
         transport: signalR.HttpTransportType.WebSockets,
-        withCredentials: false // allow CORS
-      }) // set the URL of the SignalR hub
+        withCredentials: false
+      })
       .build();
 
-    // listen for the 'update' event from the hub
-    this.connection.on('update', message => {
-      // TODO: Fetch new graph status of this.searchId
-      console.log("RECEIVED AT FRONTEND");
-      const block = JSON.parse(message);
-      console.log(block);
-      // TODO: Loop over transactions, compare with Vuex pendingTransactions, remove from pendingTransactions if in block. This updates the list of pendingTransactions.
+    this.connection.on('update', () => {
+      this.getPendingTransactions();
     });
 
-    // start the connection
     this.connection.start().catch(err => console.error(err));
   },
 }

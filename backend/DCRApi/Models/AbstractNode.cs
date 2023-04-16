@@ -8,7 +8,7 @@ public abstract class AbstractNode
     protected int Id = new Random().Next();
     private string _blockchainFilename { get; }
     public Blockchain Blockchain {get; init;}
-    private readonly BlockchainSerializer _blockchainSerializer = new BlockchainSerializer();
+    protected readonly BlockchainSerializer _blockchainSerializer = new BlockchainSerializer();
     public NetworkClient NetworkClient {get; init;}
     private GraphExecutor _graphExecutor {get; init;}
     // miningCTSource is present in all nodes, to allow for the same implementation in resyncing blockchain
@@ -21,7 +21,7 @@ public abstract class AbstractNode
     {
         NetworkClient = networkClient;
         _graphExecutor = new GraphExecutor();
-        _blockchainFilename = $"blockchain{Id.ToString()}.json";
+        _blockchainFilename = $"blockchain{NetworkClient.ClientNode.Port}.json";
 
         if (System.IO.File.Exists(_blockchainFilename)) {
             // Load local blockchain and sync with neighbors
@@ -133,15 +133,16 @@ public abstract class AbstractNode
         NetworkClient.BroadcastBlock(block);
     }
 
-    public void ReceiveBlock(NetworkNode sender, Block receivedBlock)
+    public virtual bool ReceiveBlock(NetworkNode sender, Block receivedBlock)
     {
         lock(Blockchain)
         {
             if (receivedBlock.Index <= Blockchain.GetHead().Index || !receivedBlock.IsValid(Blockchain.Difficulty))
             {
-                return;
+                return false;
             }
             ResyncBlockchainWithNode(sender, receivedBlock);
+            return true;
         }
     }
 
