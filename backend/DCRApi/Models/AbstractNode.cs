@@ -7,6 +7,7 @@ public abstract class AbstractNode
 {
     protected int Id = new Random().Next();
     private string _blockchainFilename { get; }
+    public List<Transaction> HandledTransactions {get; init;}
     public Blockchain Blockchain {get; init;}
     protected readonly BlockchainSerializer _blockchainSerializer = new BlockchainSerializer();
     public NetworkClient NetworkClient {get; init;}
@@ -20,6 +21,7 @@ public abstract class AbstractNode
     public AbstractNode(NetworkClient networkClient)
     {
         NetworkClient = networkClient;
+        HandledTransactions = new List<Transaction>();
         _graphExecutor = new GraphExecutor();
         _blockchainFilename = $"blockchain{NetworkClient.ClientNode.Port}.json";
 
