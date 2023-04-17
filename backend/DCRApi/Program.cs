@@ -26,32 +26,34 @@ class Program
 
         var networkClient = new NetworkClient(address, backendPort);
         await networkClient.DiscoverNetwork();
-        string[] appArgs = { $"--urls={networkClient.ClientNode.URL}" };
+        string[] appArgs = {$"--urls={networkClient.ClientNode.URL}"};
 
         var builder = WebApplication.CreateBuilder(appArgs);
         var configuration = builder.Configuration;
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddControllers();
+        builder.Services.AddSignalR();
+        builder.Services.AddSingleton<PendingTransactionsHub>();
         builder.Services.AddSingleton<NetworkClient>(networkClient);
-        if (type == "miner")
-        {
+        if (type == "miner") {
             Miner node = new Miner(loggerFactory.CreateLogger<Miner>(), networkClient);
             builder.Services.AddSingleton<AbstractNode>(node);
             builder.Services.AddSingleton<Miner>(node);
             builder.Services.AddSingleton<MinerService>();
             builder.Services.AddHostedService<MinerService>(s => s.GetRequiredService<MinerService>());
-        }
-        else
-        {
+        } else {
             FullNode node = new FullNode(loggerFactory.CreateLogger<FullNode>(), networkClient);
             builder.Services.AddSingleton<AbstractNode>(node);
             builder.Services.AddSingleton<FullNode>(node);
         }
         var app = builder.Build();
+        app.UseRouting();
         app.UseAuthorization();
         app.MapControllers();
-        if (type == "node")
-        {
+        app.MapHub<PendingTransactionsHub>("/pending-transactions-hub");
+
+        if (type == "node") {
             app.UseCors(
                 options => options.WithOrigins($"http://{address}:{frontendPort}").AllowAnyMethod().AllowAnyHeader()
             );

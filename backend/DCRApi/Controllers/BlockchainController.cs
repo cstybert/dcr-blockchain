@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 
 namespace DCR;
 [ApiController]
@@ -56,9 +55,12 @@ public class BlockchainController : ControllerBase
     [HttpPost("block")]
     public IActionResult ReceiveBlock(ShareBlockRequest req)
     {
-        _logger.LogDebug($"Received Block {req.Block.Hash}");
-        _logger.LogInformation($"Received Block {req.Block.Hash}");
+        if (req.Block.Transactions.Any()) {
+            _logger.LogDebug($"Received Block {req.Block.Hash}");
+            _logger.LogInformation($"Received Block {req.Block.Hash}");
+        }
         _node.ReceiveBlock(req.SourceNode, req.Block);
+
         return Ok();
     }
 
@@ -67,7 +69,14 @@ public class BlockchainController : ControllerBase
     {
         _logger.LogDebug($"Received Transaction {transaction.Id}");
         _logger.LogInformation($"Received Transaction {transaction.Id}");
-        _node.HandleTransaction(transaction);
+        if (!_node.HandledTransactions.Any(tx => tx.Id == transaction.Id))
+        {
+            _node.HandleTransaction(transaction);
+            _node.HandledTransactions.Add(transaction);
+        } else {
+            _logger.LogDebug($"Transaction has already been handled (ignore).");
+            _logger.LogInformation($"Transaction has already been handled (ignore).");
+        }
         return Ok();
     }
 }

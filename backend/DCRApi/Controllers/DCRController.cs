@@ -10,19 +10,32 @@ public class DCRController : ControllerBase
 {
 
     private readonly ILogger<DCRController> _logger;
-    private readonly AbstractNode _node;
+    private readonly FullNode _node;
     private readonly BlockchainSerializer _blockchainSerializer = new BlockchainSerializer();
     private readonly GraphSerializer _graphSerializer = new GraphSerializer();
     private readonly GraphCreator _graphCreator = new GraphCreator();
     private readonly GraphExecutor _graphExecutor = new GraphExecutor();
 
-    public DCRController(ILogger<DCRController> logger, AbstractNode node)
+    public DCRController(ILogger<DCRController> logger, FullNode node)
     {
         _node = node;
         _logger = logger;
     }
 
-    [HttpGet("{id}")]
+    [HttpPost("create")]
+    public IActionResult Post([FromBody] CreateGraphRequest req)
+    {
+        _logger.LogInformation($"Adding graph to blockchain : {req}");
+        var graph = _graphCreator.Create(req.Activities, req.Relations);
+        var tx = new Transaction(req.Actor, Action.Create, "", graph);
+        _node.HandleTransaction(tx);
+        _node.AddDiscoveredGraph(graph);
+        _logger.LogInformation($"Block validity: {_node.Blockchain.IsValid()}");
+        _logger.LogInformation($"Created Transaction");
+        return Ok(graph);
+    }
+
+    [HttpGet("graph/{id}")]
     public IActionResult Get(string id)
     {
         _logger.LogTrace($"Fetching graph {id}");
@@ -31,21 +44,10 @@ public class DCRController : ControllerBase
         var graph = _node.Blockchain.GetGraph(id)!;
         if (graph is not null)
         {
+            _node.AddDiscoveredGraph(graph);
             return Ok(_node.Blockchain.GetGraph(id));
         }
         return NotFound("Could not find graph");
-    }
-    
-    [HttpPost("create")]
-    public IActionResult Post([FromBody] CreateGraphRequest req)
-    {
-        _logger.LogInformation($"Adding graph to blockchain : {req}");
-        var graph = _graphCreator.Create(req.Activities, req.Relations);
-        var tx = new Transaction(req.Actor, Action.Create, "", graph);
-        _node.HandleTransaction(tx);
-        _logger.LogInformation($"Block validity: {_node.Blockchain.IsValid()}");
-        _logger.LogInformation($"Created Transaction");
-        return Ok(graph);
     }
 
     [HttpPut("update/{id}")]
@@ -62,6 +64,18 @@ public class DCRController : ControllerBase
         _logger.LogInformation($"Block validity: {_node.Blockchain.IsValid()}");
         _logger.LogInformation($"Updated graph {graph.Id}");
         return Ok("Transaction added");
+    }
+
+    [HttpGet("discovered")]
+    public IActionResult GetDiscoveredGraphs()
+    {
+        return Ok(_node.DiscoveredGraphs);
+    }
+
+    [HttpGet("pending")]
+    public IActionResult GetPendingTransactions()
+    {
+        return Ok(_node.PendingTransactions);
     }
 
     private Transaction CreateUpdateGraphTransaction(Graph graph, string actor, string executingActivity)

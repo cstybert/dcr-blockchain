@@ -7,7 +7,6 @@ public class Miner : AbstractNode
 {
     private readonly ILogger<Miner> _logger;
     private readonly ConcurrentQueue<Transaction> _queue = new ConcurrentQueue<Transaction>();
-    private readonly BlockchainSerializer _blockchainSerializer = new BlockchainSerializer();
 
     public Miner(ILogger<Miner> logger, NetworkClient networkClient): base(networkClient)
     {

@@ -23,7 +23,7 @@ public class Transaction
         Action = action;
         EntityTitle = entityTitle;
         Graph = graph;
-        Id = CreateHash();
+        Id = Guid.NewGuid().ToString();
     }
 
     private string CreateHash() {
