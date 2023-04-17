@@ -2,11 +2,9 @@
   <div class="table-component">
     <table class="table">
       <thead>
-        <tr>
-          <th v-for="({title}, i) in headers" :key="i">
-            {{ title }}
-          </th>
-        </tr>
+        <th v-for="({title}, i) in headers" :key="i">
+          {{ title }}
+        </th>
       </thead>
       <tbody>
         <tr v-for="(row, i) in data" :key="i">

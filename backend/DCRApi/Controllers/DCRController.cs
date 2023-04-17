@@ -22,6 +22,18 @@ public class DCRController : ControllerBase
         _logger = logger;
     }
 
+    [HttpGet("fetched")]
+    public IActionResult GetFetchedGraphs()
+    {
+        return Ok(_node.FetchedGraphs);
+    }
+
+    [HttpGet("pending")]
+    public IActionResult GetPendingTransactions()
+    {
+        return Ok(_node.PendingTransactions);
+    }
+
     [HttpGet("{id}")]
     public IActionResult Get(string id)
     {
@@ -31,15 +43,10 @@ public class DCRController : ControllerBase
         var graph = _node.Blockchain.GetGraph(id)!;
         if (graph is not null)
         {
+            _node.AddFetchedGraph(graph);
             return Ok(_node.Blockchain.GetGraph(id));
         }
         return NotFound("Could not find graph");
-    }
-
-    [HttpGet("pending")]
-    public IActionResult GetPendingTransactions()
-    {
-        return Ok(_node.PendingTransactions);
     }
 
     [HttpPost("create")]

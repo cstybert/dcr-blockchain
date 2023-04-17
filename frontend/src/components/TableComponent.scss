@@ -7,32 +7,31 @@
   
     .table {
       border-collapse: collapse;
-      table-layout: fixed;
       width: 100%;
   
-      th, td {
-          border: 1px solid #dddddd;
-          text-align: center;
-          padding: 5px 5px;
-      }
-  
-      tr:nth-child(even) {
-          background-color: #eeeeee;
-      }
-  
-      input[type="text"] {
-          width: 100%;
-          box-sizing: border-box;
-          border: none;
-          background-color: transparent;
-      }
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: center;
+            padding: 5px 5px;
+        }
 
-      select {
-        width: 100%;
-        box-sizing: border-box;
-        border: none;
-        outline: none;
-        background-color: transparent;
-    }
+        tr:nth-child(even) {
+            background-color: #eeeeee;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            box-sizing: border-box;
+            border: none;
+            background-color: transparent;
+        }
+
+        select {
+            width: 100%;
+            box-sizing: border-box;
+            border: none;
+            outline: none;
+            background-color: transparent;
+        }
     }
 }
