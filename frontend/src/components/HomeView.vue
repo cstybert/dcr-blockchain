@@ -8,20 +8,20 @@
         or
         <button class="submit-button" @click="newGraph"> New graph </button>
       </div>
-      <h4> {{ executeMode ? 'You are in execution mode: Press on an activity\'s Executed field to execute it' : 'You are in creation mode: Add activities and relations to your graph, and finish by pressing Create graph' }}</h4>
-      <h4 v-if="executeMode">The current graph {{ isAccepting ? 'accepting' : 'not accepting' }}</h4>
+      <h4> You are in {{ executeMode ? 'execution' : 'creation' }} mode</h4>
+      <h4 v-if="executeMode">The current graph is {{ isAccepting ? 'accepting' : 'not accepting' }}</h4>
     </div>
     
     <div class="tables-container">
       <div class="table-container">
         <h2>Activities</h2>
-        <TableComponent :headers="activityHeaders" :data="activities" :executeMode="executeMode" @executeActivity="executeActivity" :disabled="hasPendingGraphCreation" /> <!-- Add disabled="hasPendingTransactions"? -->
+        <TableComponent :headers="activityHeaders" :data="activities" :executeMode="executeMode" @executeActivity="executeActivity" :disabled="graphHasPendingTransactions" /> <!-- Add disabled="hasPendingTransactions"? -->
         <button class="submit-button" :disabled="executeMode" @click="addActivity"> Add activity </button>
       </div>
 
       <div class="table-container">
         <h2>Relations</h2>
-        <TableComponent :headers="relationHeaders" :data="relations" :activityTitles="activityTitles" :relationTypes="relationTypes" :executeMode="executeMode" :disabled="hasPendingGraphCreation" /> <!-- Add disabled="hasPendingTransactions"? -->
+        <TableComponent :headers="relationHeaders" :data="relations" :activityTitles="activityTitles" :relationTypes="relationTypes" :executeMode="executeMode" :disabled="graphHasPendingTransactions" /> <!-- Add disabled="hasPendingTransactions"? -->
         <button class="submit-button" :disabled="executeMode" @click="addRelation"> Add relation </button>
       </div>
     </div>
@@ -59,8 +59,8 @@ export default {
         {title: "Title", mapping: "title", type: "text"},
         {title: "Pending", mapping: "pending", type: "checkbox"},
         {title: "Included", mapping: "included", type: "checkbox"},
-        {title: "Executed", mapping: "executed", type: "checkbox"},
-        {title: "Enabled", mapping: "enabled", type: "checkbox"}],
+        {title: "Executed", mapping: "executed", type: "button"}
+      ],
       activities: [
         { title: "Select papers", pending: true, included: true, executed: false, enabled: true },
         { title: "Write introduction", pending: true, included: true, executed: false, enabled: false },
@@ -89,7 +89,7 @@ export default {
       pendingTransactionsHeaders: [
         {title: "Graph ID", mapping: "graphId", type: "text"},
         {title: "Action", mapping: "action", type: "text"},
-        {title: "Executed Activity", mapping: "activity", type: "text"}
+        {title: "Target Activity", mapping: "activity", type: "text"}
       ],
       pendingTransactions: []
     }
@@ -101,10 +101,10 @@ export default {
     },
 
     hasPendingGraphCreation() {
-      return this.pendingTransactions.some(transaction => (transaction['graphId'] == this.currentGraphId) && transaction['action'] == "Created graph");
+      return this.pendingTransactions.some(transaction => (transaction['graphId'] == this.currentGraphId) && transaction['action'] == "Create graph");
     },
 
-    hasPendingTransactions() {
+    graphHasPendingTransactions() {
       return this.pendingTransactions.some(transaction => transaction['graphId'] == this.currentGraphId);
     }
   },
@@ -171,8 +171,8 @@ export default {
       });
     },
 
-    async executeActivity(title) {
-      const payload = {'actor': "1", 'executingActivity': title};
+    async executeActivity(activityTitle) {
+      const payload = {'actor': "1", 'executingActivity': activityTitle};
       await axios.put(`DCR/update/${this.currentGraphId}`, payload).then(res => {
         if (res.status == 200) {
           this.getPendingTransactions();
@@ -185,7 +185,7 @@ export default {
     formatPendingTransactions(transactions) {
       return transactions.map((transaction) => ({
         'graphId': transaction['graph']['id'],
-        'action': transaction['entityTitle'] ? 'Executed activity' : 'Created graph',
+        'action': transaction['entityTitle'] ? 'Execute activity' : 'Create graph',
         'activity': transaction['entityTitle']
       }));
     }

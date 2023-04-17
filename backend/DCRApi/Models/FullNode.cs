@@ -29,8 +29,10 @@ public class FullNode : AbstractNode
     public override bool ReceiveBlock(NetworkNode sender, Block receivedBlock) {
         if (base.ReceiveBlock(sender, receivedBlock))
         {
-            PendingTransactions.RemoveAll(pt => receivedBlock.Transactions.Any(t => t.Id == pt.Id));
-            PendingTransactionsHub.SendUpdateNotification();
+            if (receivedBlock.Transactions.Any()) {
+                PendingTransactions.RemoveAll(pt => receivedBlock.Transactions.Any(t => t.Id == pt.Id));
+                PendingTransactionsHub.SendUpdateNotification();
+            }
             return true;
         }
         return false;

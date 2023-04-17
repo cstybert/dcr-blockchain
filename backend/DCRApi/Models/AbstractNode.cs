@@ -131,7 +131,9 @@ public abstract class AbstractNode
     protected void ShareBlock(Block block)
     {
         var blockJson = JsonConvert.SerializeObject(block);
-        Console.WriteLine($"Broadcasting block {blockJson}");
+        if (block.Transactions.Any()) {
+            Console.WriteLine($"Broadcasting block {blockJson}");
+        }
         NetworkClient.BroadcastBlock(block);
     }
 

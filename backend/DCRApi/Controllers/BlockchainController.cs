@@ -49,7 +49,9 @@ public class BlockchainController : ControllerBase
     [HttpPost("block")]
     public IActionResult ReceiveBlock(ShareBlockRequest req)
     {
-        Console.WriteLine($"Received Block {req.Block.Hash}");
+        if (req.Block.Transactions.Any()) {
+            Console.WriteLine($"Received Block {req.Block.Hash}");
+        }
         _node.ReceiveBlock(req.SourceNode, req.Block);
 
         return Ok();
