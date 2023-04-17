@@ -11,6 +11,23 @@
     </div>
 
     <div class="seperator"></div>
+
+    <!-- Overview -->
+    <h2>Overview</h2>
+    <span> See discovered graphs and pending transactions </span>
+    <div class="tables-container">
+      <div class="table-container">
+        <h3>Discovered Graphs</h3>
+        <LinkTableComponent :headers="discoveredGraphsHeaders" :data="discoveredGraphs" @showGraph="showGraph"/>
+      </div>
+
+      <div class="table-container">
+        <h3>Pending Transactions</h3>
+        <TableComponent :headers="pendingTransactionsHeaders" :data="pendingTransactions" :selectedGraph="currentGraphId" :disabled="true" />
+      </div>
+    </div>
+
+    <div class="seperator"></div>
     
     <!-- Current Graph -->
     <h2>Current Graph</h2>
@@ -32,24 +49,6 @@
       </div>
     </div>
     <button class="submit-button" @click="createGraph" :hidden="executeMode"> Create graph </button>
-
-    <div class="seperator"></div>
-
-    <!-- Overview -->
-    <h2>Overview</h2>
-    <span> See discovered graphs and pending transactions </span>
-    <div class="tables-container">
-      <div class="table-container">
-        <h3>Discovered Graphs</h3>
-        <LinkTableComponent :headers="discoveredGraphsHeaders" :data="discoveredGraphs" @showGraph="showGraph"/>
-      </div>
-
-      <div class="table-container">
-        <h3>Pending Transactions</h3>
-        <TableComponent :headers="pendingTransactionsHeaders" :data="pendingTransactions" :selectedGraph="currentGraphId" :disabled="true" />
-      </div>
-    </div>
-    
   </div>
 </template>
 
