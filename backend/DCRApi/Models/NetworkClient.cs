@@ -173,19 +173,15 @@ public class NetworkClient : IDisposable
         var shareBlockRequest = new ShareBlockRequest(block, ClientNode);
         var shareJson = _networkSerializer.Serialize(shareBlockRequest);
         var content = new StringContent(shareJson, Encoding.UTF8, "application/json");
-        Console.WriteLine("I AM " + ClientNode.URL);
         foreach (var neighbor in ClientNeighbors) {
-            Console.WriteLine("BROADCASTING BLOCK TO " + neighbor.URL);
             try
             {
                 _httpClient.PostAsync($"{neighbor.URL}/blockchain/block", content);
-                Console.WriteLine("YAY");
             }
             catch (Exception ex)
             {
                 // TODO: Determine if we should remove unreliable neighbor
                 PrintError(ex);
-                Console.WriteLine("NAY");
             }
         }
     }
