@@ -15,10 +15,6 @@
             padding: 5px 5px;
         }
 
-        tr:nth-child(even) {
-            background-color: #eeeeee;
-        }
-
         input[type="text"] {
             width: 100%;
             box-sizing: border-box;
@@ -33,5 +29,9 @@
             outline: none;
             background-color: transparent;
         }
+    }
+
+    .highlight {
+        background-color: lightblue;
     }
 }

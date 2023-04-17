@@ -37,16 +37,16 @@
 
     <!-- Overview -->
     <h2>Overview</h2>
-    <span> See user-fetched graphs and pending transactions </span>
+    <span> See discovered graphs and pending transactions </span>
     <div class="tables-container">
       <div class="table-container">
-        <h3>Fetched Graphs</h3>
-        <LinkTableComponent :headers="fetchedGraphsHeaders" :data="fetchedGraphs" @showGraph="showGraph"/>
+        <h3>Discovered Graphs</h3>
+        <LinkTableComponent :headers="discoveredGraphsHeaders" :data="discoveredGraphs" @showGraph="showGraph"/>
       </div>
 
       <div class="table-container">
         <h3>Pending Transactions</h3>
-        <TableComponent :headers="pendingTransactionsHeaders" :data="pendingTransactions" :disabled="true" />
+        <TableComponent :headers="pendingTransactionsHeaders" :data="pendingTransactions" :selectedGraph="currentGraphId" :disabled="true" />
       </div>
     </div>
     
@@ -104,11 +104,11 @@ export default {
         {id: 2, text: '-->% (excludes)'},
         {id: 3, text: '-->+ (includes)'},
       ],
-      fetchedGraphsHeaders: [
-        {title: "Graph ID", mapping: "graphId"},
-        {title: "Accepting", mapping: "accepting"},
+      discoveredGraphsHeaders: [
+        {title: "Graph ID", mapping: "id"}
+        // {title: "Accepting", mapping: "accepting"},
       ],
-      fetchedGraphs: [],
+      discoveredGraphs: [],
       pendingTransactionsHeaders: [
         {title: "Graph ID", mapping: "graphId", type: "text"},
         {title: "Action", mapping: "action", type: "text"},
@@ -134,7 +134,7 @@ export default {
 
   methods: {
     async searchGraph(id) {
-      await axios.get(`DCR/${id}`).then(res => {
+      await axios.get(`DCR/graph/${id}`).then(res => {
         if (res.status == 200) {
           this.activities = res.data['activities'];
           this.relations = res.data['relations'];
@@ -142,8 +142,8 @@ export default {
           this.currentGraphId = this.searchId;
           this.executeMode = true;
 
-          if (!this.fetchedGraphs.some(graph => graph['graphId'] == id)) {
-            this.getFetchedGraphs();
+          if (!this.discoveredGraphs.some(graph => graph['id'] == id)) {
+            this.getDiscoveredGraphs();
           }
         }
       }).catch(err => {
@@ -172,10 +172,36 @@ export default {
       this.relations.push({ source: "", type: null, target: "" });
     },
 
-    async getFetchedGraphs() {
-      await axios.get(`DCR/fetched`).then(res => {
+    async createGraph() {
+      const payload = {"Actor": "Foo", "Activities": this.activities, "Relations": this.relations};
+      await axios.post(`DCR/create`, payload).then(res => {
         if (res.status == 200) {
-          this.fetchedGraphs = this.formatFetchedGraphs(res.data);
+          this.searchId = res.data['id'];
+          this.currentGraphId = res.data['id'];
+          this.isAccepting = res.data['accepting'];
+          this.executeMode = true;
+          this.getPendingTransactions();
+        }
+      }).catch(err => {
+          console.log(err);
+      });
+    },
+
+    async executeActivity(activityTitle) {
+      const payload = {'actor': "1", 'executingActivity': activityTitle};
+      await axios.put(`DCR/update/${this.currentGraphId}`, payload).then(res => {
+        if (res.status == 200) {
+          this.getPendingTransactions();
+        }
+      }).catch(err => {
+          console.log(err);
+      });
+    },
+
+    async getDiscoveredGraphs() {
+      await axios.get(`DCR/discovered`).then(res => {
+        if (res.status == 200) {
+          this.discoveredGraphs = this.formatDiscoveredGraphs(res.data);
         }
       }).catch(err => {
           console.log(err);
@@ -197,37 +223,9 @@ export default {
       });
     },
 
-    async createGraph() {
-      const payload = {"Actor": "Foo", "Activities": this.activities, "Relations": this.relations};
-      await axios.post(`DCR/create`, payload).then(res => {
-        if (res.status == 200) {
-          this.searchId = res.data['id'];
-          this.currentGraphId = res.data['id'];
-          this.isAccepting = res.data['accepting'];
-          this.executeMode = true;
-
-          this.getFetchedGraphs();
-          this.getPendingTransactions();
-        }
-      }).catch(err => {
-          console.log(err);
-      });
-    },
-
-    async executeActivity(activityTitle) {
-      const payload = {'actor': "1", 'executingActivity': activityTitle};
-      await axios.put(`DCR/update/${this.currentGraphId}`, payload).then(res => {
-        if (res.status == 200) {
-          this.getPendingTransactions();
-        }
-      }).catch(err => {
-          console.log(err);
-      });
-    },
-
-    formatFetchedGraphs(graphs) {
+    formatDiscoveredGraphs(graphs) {
       return graphs.map((graph) => ({
-        'graphId': graph['id'],
+        'id': graph['id'],
         'accepting': graph['accepting']
       }));
     },
@@ -242,7 +240,7 @@ export default {
   },
 
   created() {
-    this.getFetchedGraphs();
+    this.getDiscoveredGraphs();
     this.getPendingTransactions();
 
     this.connection = new signalR.HubConnectionBuilder()

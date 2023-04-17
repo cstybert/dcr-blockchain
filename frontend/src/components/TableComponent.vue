@@ -7,7 +7,7 @@
         </th>
       </thead>
       <tbody>
-        <tr v-for="(row, i) in data" :key="i">
+        <tr v-for="(row, i) in data" :key="i" :class="{'highlight': (row['graphId'] ? row['graphId']  == selectedGraph : false)}">
           <td v-for="({mapping, type}, j) in headers" :key="j">
             <!-- Text fields (e.g. Title) -->
             <input v-if="type == 'text'"
@@ -74,6 +74,10 @@ export default {
     disabled: {
       type: Boolean,
       default: false
+    },
+    selectedGraph: {
+      type: String,
+      default: ""
     }
   },
 

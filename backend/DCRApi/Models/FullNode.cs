@@ -6,13 +6,13 @@ public class FullNode : AbstractNode
 {
     private readonly ILogger<FullNode> _logger;
     private readonly BlockSerializer _blockSerializer;
-    public List<Graph> FetchedGraphs { get; set; }
+    public List<Graph> DiscoveredGraphs { get; set; }
     public List<Transaction> PendingTransactions { get; set; }
     public FullNode(ILogger<FullNode> logger, NetworkClient networkClient): base(networkClient)
     {
         _logger = logger;
         _blockSerializer = new BlockSerializer();
-        FetchedGraphs = new List<Graph>();
+        DiscoveredGraphs = new List<Graph>();
         PendingTransactions = new List<Transaction>();
     }
 
@@ -42,11 +42,11 @@ public class FullNode : AbstractNode
         return false;
     }
 
-    public void AddFetchedGraph(Graph graph)
+    public void AddDiscoveredGraph(Graph graph)
     {
-        if (!FetchedGraphs.Any(g => g.Id == graph.Id))
+        if (!DiscoveredGraphs.Any(g => g.Id == graph.Id))
         {
-            FetchedGraphs.Add(graph);
+            DiscoveredGraphs.Add(graph);
         }
     }
 

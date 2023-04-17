@@ -42,7 +42,7 @@ export default {
   methods: {
     async selectGraph(graph) {
       this.selectedGraph = graph;
-      this.$emit('showGraph', graph['graphId']);
+      this.$emit('showGraph', graph['id']);
     }
   }
 }

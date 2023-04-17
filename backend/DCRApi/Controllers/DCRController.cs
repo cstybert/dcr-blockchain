@@ -22,33 +22,6 @@ public class DCRController : ControllerBase
         _logger = logger;
     }
 
-    [HttpGet("fetched")]
-    public IActionResult GetFetchedGraphs()
-    {
-        return Ok(_node.FetchedGraphs);
-    }
-
-    [HttpGet("pending")]
-    public IActionResult GetPendingTransactions()
-    {
-        return Ok(_node.PendingTransactions);
-    }
-
-    [HttpGet("{id}")]
-    public IActionResult Get(string id)
-    {
-        _logger.LogTrace($"Fetching graph {id}");
-        _logger.LogInformation($"Block validity: {_node.Blockchain.IsValid()}");
-        // TODO Modify getgraph so it only returns if graph is 8 blocks deep
-        var graph = _node.Blockchain.GetGraph(id)!;
-        if (graph is not null)
-        {
-            _node.AddFetchedGraph(graph);
-            return Ok(_node.Blockchain.GetGraph(id));
-        }
-        return NotFound("Could not find graph");
-    }
-
     [HttpPost("create")]
     public IActionResult Post([FromBody] CreateGraphRequest req)
     {
@@ -60,6 +33,21 @@ public class DCRController : ControllerBase
         _logger.LogInformation($"Created Transaction");
         _node.AddPendingTransaction(tx);
         return Ok(graph);
+    }
+
+    [HttpGet("graph/{id}")]
+    public IActionResult Get(string id)
+    {
+        _logger.LogTrace($"Fetching graph {id}");
+        _logger.LogInformation($"Block validity: {_node.Blockchain.IsValid()}");
+        // TODO Modify getgraph so it only returns if graph is 8 blocks deep
+        var graph = _node.Blockchain.GetGraph(id)!;
+        if (graph is not null)
+        {
+            _node.AddDiscoveredGraph(graph);
+            return Ok(_node.Blockchain.GetGraph(id));
+        }
+        return NotFound("Could not find graph");
     }
 
     [HttpPut("update/{id}")]
@@ -77,6 +65,18 @@ public class DCRController : ControllerBase
         _logger.LogInformation($"Updated graph {graph.Id}");
         _node.AddPendingTransaction(tx);
         return Ok("Transaction added");
+    }
+
+    [HttpGet("discovered")]
+    public IActionResult GetDiscoveredGraphs()
+    {
+        return Ok(_node.DiscoveredGraphs);
+    }
+
+    [HttpGet("pending")]
+    public IActionResult GetPendingTransactions()
+    {
+        return Ok(_node.PendingTransactions);
     }
 
     private Transaction CreateUpdateGraphTransaction(Graph graph, string actor, string executingActivity)
