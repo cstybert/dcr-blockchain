@@ -29,9 +29,9 @@ public class DCRController : ControllerBase
         var graph = _graphCreator.Create(req.Activities, req.Relations);
         var tx = new Transaction(req.Actor, Action.Create, "", graph);
         _node.HandleTransaction(tx);
+        _node.AddDiscoveredGraph(graph);
         _logger.LogInformation($"Block validity: {_node.Blockchain.IsValid()}");
         _logger.LogInformation($"Created Transaction");
-        _node.AddPendingTransaction(tx);
         return Ok(graph);
     }
 
@@ -63,7 +63,6 @@ public class DCRController : ControllerBase
         _node.HandleTransaction(tx);
         _logger.LogInformation($"Block validity: {_node.Blockchain.IsValid()}");
         _logger.LogInformation($"Updated graph {graph.Id}");
-        _node.AddPendingTransaction(tx);
         return Ok("Transaction added");
     }
 

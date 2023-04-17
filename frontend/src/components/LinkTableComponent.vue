@@ -7,7 +7,7 @@
           </th>
       </thead>
       <tbody>
-        <tr v-for="(graph, i) in data" :key="i" @click="selectGraph(graph)" :class="{'highlight': (graph == selectedGraph)}">
+        <tr v-for="(graph, i) in data" :key="i" @click="selectGraph(graph)" :class="{'highlight': (graph['id'] == selectedGraph)}">
           <td v-for="({mapping}, j) in headers" :key="j">
             {{ graph[mapping] }}
           </td>
@@ -22,12 +22,6 @@ import "./LinkTableComponent.scss";
 
 export default {
   name: 'LinkTableComponent',
-  data() {
-    return {
-      selectedGraph: null
-    }
-  },
-
   props: {
     headers: {
       type: Array,
@@ -36,12 +30,15 @@ export default {
     data: {
       type: Array,
       required: true
+    },
+    selectedGraph: {
+      type: String,
+      default: ""
     }
   },
 
   methods: {
     async selectGraph(graph) {
-      this.selectedGraph = graph;
       this.$emit('showGraph', graph['id']);
     }
   }

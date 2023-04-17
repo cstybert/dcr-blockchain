@@ -18,7 +18,7 @@
     <div class="tables-container">
       <div class="table-container">
         <h3>Discovered Graphs</h3>
-        <LinkTableComponent :headers="discoveredGraphsHeaders" :data="discoveredGraphs" @showGraph="showGraph"/>
+        <LinkTableComponent :headers="discoveredGraphsHeaders" :data="discoveredGraphs" @showGraph="showGraph" :selectedGraph="currentGraphId"/>
       </div>
 
       <div class="table-container">
@@ -105,7 +105,6 @@ export default {
       ],
       discoveredGraphsHeaders: [
         {title: "Graph ID", mapping: "id"}
-        // {title: "Accepting", mapping: "accepting"},
       ],
       discoveredGraphs: [],
       pendingTransactionsHeaders: [
@@ -251,6 +250,7 @@ export default {
       .build();
 
     this.connection.on('update', () => {
+      this.getDiscoveredGraphs();
       this.getPendingTransactions();
     });
 

@@ -35,7 +35,7 @@
             <!-- Select relation field (e.g. Type) -->
             <select v-else-if="type == 'select relation'" :disabled="disabled == true ? disabled : executeMode" v-model="row[mapping]">
               <option disabled value="">Select a relation type</option>
-              <option :value="id" v-for="({id}, i) in relationTypes" :key="i"> {{ id }} </option>
+              <option :value="id" v-for="({id, text}, i) in relationTypes" :key="i"> {{ text }} </option>
             </select>
           </td>
         </tr>
