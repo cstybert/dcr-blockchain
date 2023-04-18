@@ -39,13 +39,13 @@
       <div class="table-container">
         <h3>Activities</h3>
         <TableComponent :headers="activityHeaders" :data="activities" :executeMode="executeMode" @executeActivity="executeActivity" :disabled="graphHasPendingTransactions" /> <!-- Add disabled="hasPendingTransactions"? -->
-        <button class="submit-button" :disabled="executeMode" @click="addActivity"> Add activity </button>
+        <button class="submit-button" :hidden="executeMode" @click="addActivity"> Add activity </button>
       </div>
 
       <div class="table-container">
         <h3>Relations</h3>
         <TableComponent :headers="relationHeaders" :data="relations" :activityTitles="activityTitles" :relationTypes="relationTypes" :executeMode="executeMode" :disabled="graphHasPendingTransactions" /> <!-- Add disabled="hasPendingTransactions"? -->
-        <button class="submit-button" :disabled="executeMode" @click="addRelation"> Add relation </button>
+        <button class="submit-button" :hidden="executeMode" @click="addRelation"> Add relation </button>
       </div>
     </div>
     <button class="submit-button" @click="createGraph" :hidden="executeMode"> Create graph </button>
@@ -174,7 +174,6 @@ export default {
       const payload = {"Actor": "Foo", "Activities": this.activities, "Relations": this.relations};
       await axios.post(`DCR/create`, payload).then(res => {
         if (res.status == 200) {
-          this.searchId = res.data['id'];
           this.currentGraphId = res.data['id'];
           this.isAccepting = res.data['accepting'];
           this.executeMode = true;
