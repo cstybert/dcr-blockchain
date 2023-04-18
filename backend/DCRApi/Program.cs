@@ -25,6 +25,9 @@ var builder = WebApplication.CreateBuilder(appArgs);
 var configuration = builder.Configuration;
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddControllers();
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<PendingTransactionsHub>();
 builder.Services.AddSingleton<NetworkClient>(networkClient);
 if (type == "miner") {
     Miner node = new Miner(loggerFactory.CreateLogger<Miner>(), networkClient);
@@ -38,8 +41,11 @@ if (type == "miner") {
     builder.Services.AddSingleton<FullNode>(node);
 }
 var app = builder.Build();
+app.UseRouting();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<PendingTransactionsHub>("/pending-transactions-hub");
+
 if (type == "node") {
     app.UseCors(
         options => options.WithOrigins($"http://{address}:{frontendPort}").AllowAnyMethod().AllowAnyHeader()

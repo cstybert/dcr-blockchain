@@ -4,9 +4,9 @@ namespace DCR;
 public class BlockSerializer
 {
 
-    public string Serialize(Block block)
+    public string Serialize(List<Transaction> transactions)
     {
-        return JsonConvert.SerializeObject(block, Formatting.Indented);
+        return JsonConvert.SerializeObject(transactions, Formatting.Indented);
     }
 
     public Block Deserialize(string json)
