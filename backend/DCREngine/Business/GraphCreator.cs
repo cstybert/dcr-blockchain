@@ -37,13 +37,14 @@ namespace Business
 
                 if (!target.Included) {
                     target.Enabled = false;
+                    continue;
                 } else if (rel.Type == RelationType.CONDITION) {
                     if (source.Included && !source.Executed) {
                         target.Enabled = false;
-                    } else {
-                        target.Enabled = true;
+                        continue;
                     }
                 }
+                target.Enabled = true;
             }
         }
 

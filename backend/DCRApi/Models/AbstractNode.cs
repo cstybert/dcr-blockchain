@@ -99,7 +99,7 @@ public abstract class AbstractNode
         int localChainLength = Blockchain.Chain.Count();
         var reconstructedChain = new Blockchain(Blockchain.Difficulty);
         reconstructedChain.Append(remoteHead);
-        for (int i = remoteHead.Index; i >= 0; i--)
+        for (int i = remoteHead.Index-1; i >= 0; i--)
         {
             var remoteBlock = await NetworkClient.GetBlock(node, i);
             if (remoteBlock is null || !reconstructedChain.IsValid())
@@ -108,20 +108,20 @@ public abstract class AbstractNode
                 return;
             }
             reconstructedChain.Prepend(remoteBlock);
-            var IndexOfPreviousHash = Blockchain.Chain.FindIndex(b => b.Hash == remoteBlock.PreviousBlockHash);
+            var indexOfPreviousHash = Blockchain.Chain.FindIndex(b => b.Hash == remoteBlock.PreviousBlockHash);
             // If no block has hash equal to remote previousblockhash request another block
-            if (IndexOfPreviousHash == -1)
+            if (indexOfPreviousHash == -1)
             {
                 continue;
             }
-            var lengthOfReplacing = IndexOfPreviousHash + reconstructedChain.Chain.Count();
+            var lengthOfReplacing = indexOfPreviousHash + reconstructedChain.Chain.Count();
             if (lengthOfReplacing <= localChainLength)
             {
                 return;
             }
             miningCTSource.Cancel();
             // Delete all blocks from the Index of PreviousBlockHash + 1 and to the end of the chain
-            Blockchain.RemoveRange(IndexOfPreviousHash + 1, Blockchain.Chain.Count() - IndexOfPreviousHash + 1);
+            Blockchain.RemoveRange(indexOfPreviousHash + 1, Blockchain.Chain.Count() - indexOfPreviousHash - 1);
             Blockchain.Append(reconstructedChain.Chain);
             ShareBlock(Blockchain.GetHead());
             Save();

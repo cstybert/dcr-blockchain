@@ -90,7 +90,7 @@ public class Blockchain
 
     public void Prepend(Block block) 
     {
-        _chain.Prepend(block);
+        _chain = _chain.Prepend(block).ToList();
     }
 
     public Block GetHead()
