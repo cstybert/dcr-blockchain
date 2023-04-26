@@ -42,7 +42,6 @@ public class Miner :  AbstractNode, IMiner
         Console.WriteLine("c");
         while (stopwatch.ElapsedMilliseconds < 4000 && i < Settings.SizeOfBlocks)
         {
-            Console.WriteLine($"Elapsed : {stopwatch.ElapsedMilliseconds}");
             _queue.TryDequeue(out transaction);
             if (transaction is null)
             {

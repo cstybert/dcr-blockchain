@@ -8,9 +8,8 @@ public static class Settings
     public static int NumberNeighbours = 1;
 
     public static int Difficulty = 0;
-    public static TimeSpan MineTime = new TimeSpan(0, 0, 4);
     public static bool IsEval = true;
-    public static int NumEvalTransactions = 200000;
+    public static int NumEvalTransactions = 250000;
 
     // Normal settings
 
@@ -20,5 +19,6 @@ public static class Settings
     // public static int Difficulty = 3;
     // public static int MineTime = int.MaxValue;
     // public static bool IsEval = false;
+    //public static int NumEvalTransactions = 200000;
 
 }
