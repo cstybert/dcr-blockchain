@@ -8,7 +8,7 @@ public class FullNode : AbstractNode
     private readonly BlockSerializer _blockSerializer;
     public List<Graph> DiscoveredGraphs { get; set; }
     public List<Transaction> PendingTransactions { get; set; }
-    public FullNode(ILogger<FullNode> logger, NetworkClient networkClient): base(networkClient)
+    public FullNode(ILogger<FullNode> logger, NetworkClient networkClient, Settings settings): base(networkClient, settings)
     {
         _logger = logger;
         _blockSerializer = new BlockSerializer();
@@ -18,7 +18,7 @@ public class FullNode : AbstractNode
 
     public override void HandleTransaction(Transaction tx)
     {
-        if (IsValidTransaction(tx))
+        if (IsValidTransaction(tx, new List<Transaction>()))
         {
             lock (Blockchain)
             {

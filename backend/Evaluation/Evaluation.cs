@@ -9,19 +9,22 @@ public class Evaluation{
     private ILogger<Miner> _loggerMiner;
     private Miner _miner;
     private int HandledTransactions = 0;
+    private Settings _settings = new Settings()
+    {TimeToSleep = 0, SizeOfBlocks = int.MaxValue, NumberNeighbours = 1, 
+     Difficulty = 0, IsEval = true, NumEvalTransactions = 5000};
 
     public Evaluation()
     {
         _loggerMiner = LoggerFactory
             .Create(logging => logging.AddConsole())
             .CreateLogger<Miner>();
-        _miner = new Miner(_loggerMiner, _networkClient);
+        _miner = new Miner(_loggerMiner, _networkClient, _settings);
     }
     public async void Eval()
     {
         int i = 0;
         string graphstring = """{"Actor":"Foo","Activities":[{"title":"Select papers","pending":true,"included":true,"executed":false,"enabled":true},{"title":"Write introduction","pending":true,"included":true,"executed":false,"enabled":false},{"title":"Write abstract","pending":true,"included":true,"executed":false,"enabled":false},{"title":"Write conclusion","pending":true,"included":true,"executed":false,"enabled":false}],"Relations":[{"source":"Select papers","type":2,"target":"Select papers"},{"source":"Select papers","type":0,"target":"Write introduction"},{"source":"Select papers","type":0,"target":"Write abstract"},{"source":"Select papers","type":0,"target":"Write conclusion"},{"source":"Write introduction","type":1,"target":"Write abstract"},{"source":"Write conclusion","type":1,"target":"Write abstract"}]}""";
-        while (i < Settings.NumEvalTransactions)
+        while (i < _settings.NumEvalTransactions)
         {
             if (i % 1000 == 0 ) Console.WriteLine($"Added {i} transactions");
             Graph graph = JsonConvert.DeserializeObject<Graph>(graphstring)!;

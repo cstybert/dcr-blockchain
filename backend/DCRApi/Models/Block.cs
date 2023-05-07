@@ -43,9 +43,7 @@ public class Block
     public string GetHash() 
     {
         string jsonTx = JsonConvert.SerializeObject(_transactions);
-        // Hash to be calculated for all fields except Hash
-        // string inputstring = $"{PreviousBlockHash}{Timestamp}{Nonce}{jsonTx}";
-        // Fix for now
+        // Hash to be calculated for all fields except Hash and Timestamp
         string inputstring = $"{PreviousBlockHash}{Nonce}{jsonTx}";
 
         byte[] inputbytes = Encoding.ASCII.GetBytes(inputstring);
