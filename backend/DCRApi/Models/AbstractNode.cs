@@ -2,6 +2,7 @@ namespace DCR;
 
 using Newtonsoft.Json;
 using Business;
+using Models;
 
 public abstract class AbstractNode
 {
@@ -12,27 +13,29 @@ public abstract class AbstractNode
     protected readonly BlockchainSerializer _blockchainSerializer = new BlockchainSerializer();
     public NetworkClient NetworkClient {get; init;}
     private GraphExecutor _graphExecutor {get; init;}
+    protected Settings _settings;
     // miningCTSource is present in all nodes, to allow for the same implementation in resyncing blockchain
     // even if it is not used in other node types than miner.
     public CancellationTokenSource miningCTSource = new CancellationTokenSource();
     public abstract void HandleTransaction(Transaction tx);
 
 
-    public AbstractNode(NetworkClient networkClient)
+    public AbstractNode(NetworkClient networkClient, Settings settings)
     {
         NetworkClient = networkClient;
         HandledTransactions = new List<Transaction>();
         _graphExecutor = new GraphExecutor();
         _blockchainFilename = $"blockchain{NetworkClient.ClientNode.Port}.json";
+        _settings = settings;
 
         if (System.IO.File.Exists(_blockchainFilename)) {
             // Load local blockchain and sync with neighbors
             Console.WriteLine("Loading saved blockchain");
             var blockchainJson = System.IO.File.ReadAllText(_blockchainFilename);
             Blockchain = _blockchainSerializer.Deserialize(blockchainJson);
-            ResyncBlockchain(Settings.NumberNeighbours);
+            ResyncBlockchain(_settings.NumberNeighbours);
         } else {
-            var neighborBlockchain = GetRandomBlockchain(Settings.NumberNeighbours).Result;
+            var neighborBlockchain = GetRandomBlockchain(_settings.NumberNeighbours).Result;
             if (neighborBlockchain is not null) {
                 // Full sync with random neighbors
                 Console.WriteLine("Synced with a neighbor blockchain");
@@ -40,7 +43,7 @@ public abstract class AbstractNode
             } else {
                 // Create new blockchain
                 Console.WriteLine("Could not sync with neighbor blockchains, creating new");
-                Blockchain = new Blockchain(Settings.Difficulty);
+                Blockchain = new Blockchain(_settings.Difficulty);
                 Blockchain.Initialize(miningCTSource.Token);
             }
         }
@@ -150,11 +153,14 @@ public abstract class AbstractNode
         }
     }
 
-    protected bool IsValidTransaction(Transaction tx) {
+    protected bool IsValidTransaction(Transaction tx, List<Transaction> txs) {
         if (tx.Action == Action.Create) {
             return tx.Graph.Id != "";
         } else {
-            var oldGraph = Blockchain.GetGraph(tx.Graph.Id)!;
+            Transaction? transaction = txs.FindLast(t => t.Graph.Id == tx.Graph.Id);
+            Graph oldGraph;
+            if (transaction is not null) oldGraph = transaction.Graph;
+            else oldGraph = Blockchain.GetGraph(tx.Graph.Id)!;
             if (oldGraph is not null) {
                 var graphSerializer = new GraphSerializer();
                 var expectedUpdatedGraph = _graphExecutor.Execute(oldGraph, tx.EntityTitle);
