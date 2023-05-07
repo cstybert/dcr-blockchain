@@ -48,7 +48,6 @@ public class Miner :  AbstractNode, IMiner
         while (i < _settings.SizeOfBlocks)
         {
             if (miningCT.IsCancellationRequested) {
-                Console.WriteLine($"{i}: {miningCT.IsCancellationRequested}");
                 return txs;
             }
             _queue.TryDequeue(out transaction);

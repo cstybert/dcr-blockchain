@@ -6,10 +6,10 @@ namespace Tests;
 
 public class GraphCreatorTests
 {
-    private GraphSerializer _graphSerializer;
-    private BlockchainSerializer _blockchainSerializer;
-    private Settings _settings;
-    private Miner _miner;
+    private GraphSerializer? _graphSerializer;
+    private BlockchainSerializer? _blockchainSerializer;
+    private Settings? _settings;
+    private Miner? _miner;
 
     [SetUp]
     public void Setup()
@@ -44,16 +44,10 @@ public class GraphCreatorTests
 
         stopwatch.Start();
         cancellationTokenSource.CancelAfter(4000);
-        var actualTxs = _miner.DequeueTransactions(cancellationToken); // TODO: Stop execution and return result if elapsed time exceeds 4000 ms
+        var actualTxs = _miner.DequeueTransactions(cancellationToken);
         stopwatch.Stop();
 
-        if (cancellationToken.IsCancellationRequested)
-        {
-            Console.WriteLine($"Number of validated transactions: {actualTxs.Count()} / {_settings.NumEvalTransactions}");
-            Console.WriteLine("Execution stopped due to timeout.");
-        }
-
-        Console.WriteLine($"Elapsed validation time: {stopwatch.Elapsed} ms");
+        Console.WriteLine($"Elapsed validation time: {stopwatch.Elapsed.TotalMilliseconds} ms");
         Console.WriteLine($"Number of validated transactions: {actualTxs.Count()} / {_settings.NumEvalTransactions}");
         Assert.AreEqual(_settings.NumEvalTransactions, actualTxs.Count());
     }
