@@ -4,7 +4,7 @@ using DCR;
 
 namespace Tests;
 
-public class GraphCreatorTests
+public class MinerTests
 {
     private GraphSerializer _graphSerializer;
     private BlockchainSerializer _blockchainSerializer;
