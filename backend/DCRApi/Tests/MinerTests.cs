@@ -6,10 +6,10 @@ namespace Tests;
 
 public class GraphCreatorTests
 {
-    private GraphSerializer? _graphSerializer;
-    private BlockchainSerializer? _blockchainSerializer;
-    private Settings? _settings;
-    private Miner? _miner;
+    private GraphSerializer _graphSerializer;
+    private BlockchainSerializer _blockchainSerializer;
+    private Settings _settings;
+    private Miner _miner;
 
     [SetUp]
     public void Setup()
@@ -58,6 +58,5 @@ public class GraphCreatorTests
             var tx = new Transaction("eval", DCR.Action.Create, "", graph);
             _miner.HandleTransaction(tx);
         }
-
     }
 }
