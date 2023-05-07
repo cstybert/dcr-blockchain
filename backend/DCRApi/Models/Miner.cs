@@ -35,14 +35,22 @@ public class Miner :  AbstractNode, IMiner
 
     public void Mine()
     {
-        CancellationToken miningCT = miningCTSource.Token;
+        var miningCT = miningCTSource.Token;
+        var txs = DequeueTransactions(miningCT);
+        Thread.Sleep(_settings.TimeToSleep);
+        MineTransactions(txs, miningCT);
+    }
+
+    public List<Transaction> DequeueTransactions(CancellationToken miningCT) {
         List<Transaction> txs = new List<Transaction>();
         Transaction? transaction;
         int i = 0;
-        Stopwatch stopwatch = new Stopwatch();
-        stopwatch.Start();
-        while (stopwatch.ElapsedMilliseconds < 4000 && i < _settings.SizeOfBlocks)
+        while (i < _settings.SizeOfBlocks)
         {
+            if (miningCT.IsCancellationRequested) {
+                Console.WriteLine($"{i}: {miningCT.IsCancellationRequested}");
+                return txs;
+            }
             _queue.TryDequeue(out transaction);
             if (transaction is null)
             {
@@ -58,9 +66,10 @@ public class Miner :  AbstractNode, IMiner
                 }
             }
         }
-        Console.WriteLine($"Spent {stopwatch.Elapsed} ms mining");
-        stopwatch.Stop();
-        Thread.Sleep(_settings.TimeToSleep); // For testing, a block is added every 15 seconds
+        return txs;
+    }
+
+    private void MineTransactions(List<Transaction> txs, CancellationToken miningCT) {
         var newBlock = Blockchain.MineTransactions(txs, miningCT);
         if (!miningCT.IsCancellationRequested)
         {
@@ -72,10 +81,6 @@ public class Miner :  AbstractNode, IMiner
             Console.WriteLine("Cancellation was requested");
             miningCTSource = new CancellationTokenSource();
         }
-        if(_settings.IsEval)
-        {
-            return;
-        } 
     }
 
     public void CancelMining()
