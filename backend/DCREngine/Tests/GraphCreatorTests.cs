@@ -1,6 +1,4 @@
 using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 using Models;
 using Business;
 
@@ -18,7 +16,7 @@ public class GraphCreatorTests
     [Test]
     public void Create_EmptyGraph()
     {
-        var graph = _graphCreator.Create("");
+        var graph = _graphCreator.Create(new List<Activity>(), new List<Relation>());
 
         Assert.AreEqual(0, graph.Activities.Count);
         Assert.AreEqual(0, graph.Relations.Count);
@@ -36,22 +34,5 @@ public class GraphCreatorTests
 
         Assert.AreEqual(2, graph.Activities.Count);
         Assert.AreEqual(1, graph.Relations.Count);
-    }
-
-    [Test]
-    public void Parse_SimpleGraph()
-    {
-        var input = "\"ActivityA\", \"ActivityB\", \"ActivityA\"-->*\"ActivityB\"";
-
-        var graph = _graphCreator.Create(input);
-
-        Assert.AreEqual(2, graph.Activities.Count);
-        Assert.AreEqual("ActivityA", graph.Activities[0].Title);
-        Assert.AreEqual("ActivityB", graph.Activities[1].Title);
-
-        Assert.AreEqual(1, graph.Relations.Count);
-        Assert.AreEqual(RelationType.CONDITION, graph.Relations[0].Type);
-        Assert.AreEqual("ActivityA", graph.Relations[0].Source);
-        Assert.AreEqual("ActivityB", graph.Relations[0].Target);
     }
 }
