@@ -7,15 +7,13 @@ public class BlockchainController : ControllerBase
 {
 
     private readonly ILogger<BlockchainController> _logger;
-    private readonly NetworkClient _networkClient;
     private readonly AbstractNode _node;
     private readonly BlockchainSerializer _blockchainSerializer;
 
-    public BlockchainController(ILogger<BlockchainController> logger, NetworkClient networkClient, AbstractNode node)
+    public BlockchainController(ILogger<BlockchainController> logger, AbstractNode node)
     {
         _logger = logger;
         _node = node;
-        _networkClient = networkClient;
         _blockchainSerializer = new BlockchainSerializer();
     }
 

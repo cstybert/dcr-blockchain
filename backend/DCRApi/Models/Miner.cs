@@ -72,7 +72,7 @@ public class Miner :  AbstractNode, IMiner
         var newBlock = Blockchain.MineTransactions(txs, miningCT);
         if (!miningCT.IsCancellationRequested)
         {
-            if (!_settings.IsEval) ShareBlock(newBlock);
+            ShareBlock(newBlock);
             Save();
         }
         if (miningCT.IsCancellationRequested)
