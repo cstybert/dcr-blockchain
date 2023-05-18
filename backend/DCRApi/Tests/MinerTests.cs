@@ -23,7 +23,6 @@ public class MinerTests
             SizeOfBlocks = int.MaxValue,
             NumberNeighbours = 1,
             Difficulty = 0,
-            IsEval = true,
             NumEvalTransactions = 5000
         };
         _miner = new Miner(logger, networkClient, _settings);

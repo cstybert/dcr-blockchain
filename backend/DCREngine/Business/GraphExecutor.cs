@@ -12,13 +12,13 @@ namespace Business
 
         public Graph Execute(Graph graph, string executingActivity) // TODO: Create Action/Event data model to incapsulate triggered actions/events
         {
-            var source = GetActivity(executingActivity, graph.Activities);
+            var source = _graphCreator.GetActivity(executingActivity, graph.Activities);
             source.Executed = true;
             source.Pending = false;
 
             var relations = graph.Relations.Where(e => e.Source == source.Title);
             foreach (Relation rel in relations) {
-                var target = GetActivity(rel.Target, graph.Activities);
+                var target = _graphCreator.GetActivity(rel.Target, graph.Activities);
                 if (rel.Type == RelationType.EXCLUSION) {
                     target.Included = false;
                 } else if (rel.Type == RelationType.INCLUSION) {
@@ -29,13 +29,7 @@ namespace Business
             }
 
             _graphCreator.UpdateEnabled(graph.Activities, graph.Relations);
-
             return graph;
-        }
-
-        private Activity GetActivity(string title, List<Activity> activities)
-        {
-            return activities.Single(e => e.Title == title);
         }
     }
 }
