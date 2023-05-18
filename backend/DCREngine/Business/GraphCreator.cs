@@ -11,18 +11,14 @@ namespace Business
         }
 
         public void UpdateEnabled(List<Activity> activities, List<Relation> relations) {
-            foreach (Relation rel in relations) {
-                var source = GetActivity(rel.Source, activities);
-                var target = GetActivity(rel.Target, activities);
-
-                if (!target.Included) {
-                    target.Enabled = false;
-                } else if (rel.Type == RelationType.CONDITION) {
-                    if (source.Included && !source.Executed) {
-                        target.Enabled = false;
-                    } else {
-                        target.Enabled = true;
-                    }
+            foreach (Activity activity in activities) {
+                // If activity is not included, disable
+                if (!activity.Included) {
+                    activity.Enabled = false;
+                } else {
+                    // If not all included conditions are met, disable
+                    var conditions = relations.Where(r => (r.Type == RelationType.CONDITION) && (GetActivity(r.Source, activities).Included) && (r.Target == activity.Title));
+                    activity.Enabled = conditions.All(r => GetActivity(r.Source, activities).Executed);
                 }
             }
         }
