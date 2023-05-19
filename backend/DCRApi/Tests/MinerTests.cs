@@ -23,7 +23,7 @@ public class MinerTests
             SizeOfBlocks = int.MaxValue,
             NumberNeighbours = 1,
             Difficulty = 0,
-            NumEvalTransactions = 5000
+            NumEvalTransactions = 50000
         };
         _miner = new Miner(logger, networkClient, _settings);
     }
@@ -41,6 +41,30 @@ public class MinerTests
         var cancellationTokenSource = new CancellationTokenSource();
         var cancellationToken = cancellationTokenSource.Token;
 
+        stopwatch.Start();
+        cancellationTokenSource.CancelAfter(4000);
+        var actualTxs = _miner.DequeueTransactions(cancellationToken);
+        stopwatch.Stop();
+
+        Console.WriteLine($"Elapsed validation time: {stopwatch.Elapsed.TotalMilliseconds} ms");
+        Console.WriteLine($"Number of validated transactions: {actualTxs.Count()} / {_settings.NumEvalTransactions}");
+        Assert.AreEqual(_settings.NumEvalTransactions, actualTxs.Count());
+    }
+    [Test]
+    public void Evaluate_DequeueTransactions_FilledBlockchain()
+    {
+        var graphJson = """{"Actor":"Foo","Activities":[{"title":"Select papers","pending":true,"included":true,"executed":false,"enabled":true},{"title":"Write introduction","pending":true,"included":true,"executed":false,"enabled":false},{"title":"Write abstract","pending":true,"included":true,"executed":false,"enabled":false},{"title":"Write conclusion","pending":true,"included":true,"executed":false,"enabled":false}],"Relations":[{"source":"Select papers","type":2,"target":"Select papers"},{"source":"Select papers","type":0,"target":"Write introduction"},{"source":"Select papers","type":0,"target":"Write abstract"},{"source":"Select papers","type":0,"target":"Write conclusion"},{"source":"Write introduction","type":1,"target":"Write abstract"},{"source":"Write conclusion","type":1,"target":"Write abstract"}]}""";
+
+        // Enqueue Create transactions
+        int sizeOfBlockchain = 50000;
+        // Evaluated transactions dequeue/validation
+        var stopwatch = new Stopwatch();
+        var cancellationTokenSource = new CancellationTokenSource();
+        var cancellationToken = cancellationTokenSource.Token;
+        EnqueueTransactions(graphJson, sizeOfBlockchain);
+        var actualTxsPrev = _miner.DequeueTransactions(cancellationToken);
+
+        EnqueueTransactions(graphJson, sizeOfBlockchain);
         stopwatch.Start();
         cancellationTokenSource.CancelAfter(4000);
         var actualTxs = _miner.DequeueTransactions(cancellationToken);
