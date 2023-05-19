@@ -1,13 +1,9 @@
 using NUnit.Framework;
 using Models;
-using Business;
 namespace Tests;
 
-public class GraphExecutorTests
+public class GraphExecutionTests
 {
-    private GraphCreator _graphCreator = new GraphCreator();
-    private GraphExecutor _graphExecutor = new GraphExecutor();
-
     [SetUp]
     public void Setup()
     {
@@ -31,7 +27,7 @@ public class GraphExecutorTests
         var rel6 = new Relation(RelationType.RESPONSE, writeConclusion, writeAbstract);
         var relations = new List<Relation> {rel1, rel2, rel3, rel4, rel5, rel6};
 
-        var graph = _graphCreator.Create(activities, relations);
+        var graph = new Graph(activities, relations);
         Assert.AreEqual(4, graph.Activities.Count);
         Assert.AreEqual(6, graph.Relations.Count);
 
@@ -55,7 +51,7 @@ public class GraphExecutorTests
         Assert.AreEqual(false, writeConclusion.Executed);
         Assert.AreEqual(false, writeConclusion.Enabled);
 
-        _graphExecutor.Execute(graph, selectPapers.Title);
+        graph.Execute(selectPapers.Title);
 
         Assert.AreEqual(false, selectPapers.Pending);
         Assert.AreEqual(false, selectPapers.Included);
@@ -77,7 +73,7 @@ public class GraphExecutorTests
         Assert.AreEqual(false, writeConclusion.Executed);
         Assert.AreEqual(true, writeConclusion.Enabled);
 
-        _graphExecutor.Execute(graph, writeIntroduction.Title);
+        graph.Execute(writeIntroduction.Title);
 
         Assert.AreEqual(false, selectPapers.Pending);
         Assert.AreEqual(false, selectPapers.Included);
@@ -99,7 +95,7 @@ public class GraphExecutorTests
         Assert.AreEqual(false, writeConclusion.Executed);
         Assert.AreEqual(true, writeConclusion.Enabled);
 
-        _graphExecutor.Execute(graph, writeAbstract.Title);
+        graph.Execute(writeAbstract.Title);
 
         Assert.AreEqual(false, selectPapers.Pending);
         Assert.AreEqual(false, selectPapers.Included);
@@ -121,7 +117,7 @@ public class GraphExecutorTests
         Assert.AreEqual(false, writeConclusion.Executed);
         Assert.AreEqual(true, writeConclusion.Enabled);
         
-        _graphExecutor.Execute(graph, writeConclusion.Title);
+        graph.Execute(writeConclusion.Title);
 
         Assert.AreEqual(false, selectPapers.Pending);
         Assert.AreEqual(false, selectPapers.Included);
@@ -143,7 +139,7 @@ public class GraphExecutorTests
         Assert.AreEqual(true, writeConclusion.Executed);
         Assert.AreEqual(true, writeConclusion.Enabled);
 
-        _graphExecutor.Execute(graph, writeAbstract.Title);
+        graph.Execute(writeAbstract.Title);
 
         Assert.AreEqual(false, selectPapers.Pending);
         Assert.AreEqual(false, selectPapers.Included);
@@ -191,7 +187,7 @@ public class GraphExecutorTests
         var rel11 = new Relation(RelationType.CONDITION, acceptDE, holdMeeting);
         var relations = new List<Relation> {rel1, rel2, rel3, rel4, rel5, rel6, rel7, rel8, rel9, rel10, rel11};
 
-        var graph = _graphCreator.Create(activities, relations);
+        var graph = new Graph(activities, relations);
         Assert.AreEqual(5, graph.Activities.Count);
         Assert.AreEqual(11, graph.Relations.Count);
 
@@ -220,7 +216,7 @@ public class GraphExecutorTests
         Assert.AreEqual(false, holdMeeting.Executed);
         Assert.AreEqual(false, holdMeeting.Enabled);
 
-        _graphExecutor.Execute(graph, proposeDU.Title);
+        graph.Execute(proposeDU.Title);
 
         Assert.AreEqual(false, proposeDU.Pending);
         Assert.AreEqual(true, proposeDU.Included);
@@ -247,7 +243,7 @@ public class GraphExecutorTests
         Assert.AreEqual(false, holdMeeting.Executed);
         Assert.AreEqual(false, holdMeeting.Enabled);
 
-        _graphExecutor.Execute(graph, acceptDU.Title);
+        graph.Execute(acceptDU.Title);
 
         Assert.AreEqual(false, proposeDU.Pending);
         Assert.AreEqual(true, proposeDU.Included);
@@ -274,7 +270,7 @@ public class GraphExecutorTests
         Assert.AreEqual(false, holdMeeting.Executed);
         Assert.AreEqual(true, holdMeeting.Enabled);
 
-        _graphExecutor.Execute(graph, proposeDE.Title);
+        graph.Execute(proposeDE.Title);
         
         Assert.AreEqual(false, proposeDU.Pending);
         Assert.AreEqual(true, proposeDU.Included);
@@ -301,7 +297,7 @@ public class GraphExecutorTests
         Assert.AreEqual(false, holdMeeting.Executed);
         Assert.AreEqual(true, holdMeeting.Enabled);
 
-        _graphExecutor.Execute(graph, acceptDU.Title);
+        graph.Execute(acceptDU.Title);
 
         Assert.AreEqual(false, proposeDU.Pending);
         Assert.AreEqual(true, proposeDU.Included);
@@ -328,7 +324,7 @@ public class GraphExecutorTests
         Assert.AreEqual(false, holdMeeting.Executed);
         Assert.AreEqual(true, holdMeeting.Enabled);
 
-        _graphExecutor.Execute(graph, holdMeeting.Title);
+        graph.Execute(holdMeeting.Title);
 
         Assert.AreEqual(false, proposeDU.Pending);
         Assert.AreEqual(true, proposeDU.Included);

@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using Models;
-using Business;
 
 namespace DCR;
 [ApiController]
@@ -13,8 +11,6 @@ public class DCRController : ControllerBase
     private readonly FullNode _node;
     private readonly BlockchainSerializer _blockchainSerializer = new BlockchainSerializer();
     private readonly GraphSerializer _graphSerializer = new GraphSerializer();
-    private readonly GraphCreator _graphCreator = new GraphCreator();
-    private readonly GraphExecutor _graphExecutor = new GraphExecutor();
 
     public DCRController(ILogger<DCRController> logger, FullNode node)
     {
@@ -26,7 +22,7 @@ public class DCRController : ControllerBase
     public IActionResult Post([FromBody] CreateGraphRequest req)
     {
         _logger.LogInformation($"Adding graph to blockchain : {req}");
-        var graph = _graphCreator.Create(req.Activities, req.Relations);
+        var graph = new Graph(req.Activities, req.Relations);
         var tx = new Transaction(req.Actor, Action.Create, "", graph);
         _node.HandleTransaction(tx);
         _node.AddDiscoveredGraph(graph);
@@ -80,9 +76,7 @@ public class DCRController : ControllerBase
 
     private Transaction CreateUpdateGraphTransaction(Graph graph, string actor, string executingActivity)
     {
-        var graphjson = JsonConvert.SerializeObject(graph);
-        var graph_passbyvalue = JsonConvert.DeserializeObject<Graph>(graphjson)!;
-        var updatedGraph = _graphExecutor.Execute(graph_passbyvalue, executingActivity);
-        return new Transaction(actor, Action.Update, executingActivity, updatedGraph);
+        graph.Execute(executingActivity);
+        return new Transaction(actor, Action.Update, executingActivity, graph);
     }
 }
