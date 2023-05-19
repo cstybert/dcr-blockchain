@@ -4,8 +4,8 @@ namespace Models
     {
         CONDITION,
         RESPONSE,
-        EXCLUSION,
-        INCLUSION
+        INCLUSION,
+        EXCLUSION
     }
 
     public static class RelationTypeMethods

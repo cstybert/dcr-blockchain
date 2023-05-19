@@ -1,13 +1,10 @@
 using NUnit.Framework;
 using Models;
-using Business;
 
 namespace Tests;
 
-public class GraphCreatorTests
+public class GraphCreationTests
 {
-    private GraphCreator _graphCreator = new GraphCreator();
-
     [SetUp]
     public void Setup()
     {
@@ -16,7 +13,7 @@ public class GraphCreatorTests
     [Test]
     public void Create_EmptyGraph()
     {
-        var graph = _graphCreator.Create(new List<Activity>(), new List<Relation>());
+        var graph = new Graph();
 
         Assert.AreEqual(0, graph.Activities.Count);
         Assert.AreEqual(0, graph.Relations.Count);
@@ -30,9 +27,11 @@ public class GraphCreatorTests
         var activities = new List<Activity> {src, trgt};
         var relations = new List<Relation> {new Relation(RelationType.CONDITION, src, trgt)};
 
-        var graph = _graphCreator.Create(activities, relations);
+        var graph = new Graph(activities, relations);
 
         Assert.AreEqual(2, graph.Activities.Count);
         Assert.AreEqual(1, graph.Relations.Count);
+        Assert.AreEqual(true, src.Enabled);
+        Assert.AreEqual(false, trgt.Enabled);
     }
 }

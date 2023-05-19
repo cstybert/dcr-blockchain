@@ -100,8 +100,8 @@ export default {
       relationTypes: [
         {id: 0, text: '-->* (condition)'},
         {id: 1, text: '*--> (response)'},
-        {id: 2, text: '-->% (excludes)'},
-        {id: 3, text: '-->+ (includes)'},
+        {id: 2, text: '-->+ (includes)'},
+        {id: 3, text: '-->% (excludes)'},
       ],
       discoveredGraphsHeaders: [
         {title: "Graph ID", mapping: "id"}
