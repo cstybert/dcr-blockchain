@@ -24,7 +24,7 @@ public class MinerTests
             SizeOfBlocks = int.MaxValue,
             NumberNeighbours = 1,
             Difficulty = 0,
-            NumEvalTransactions = 10000
+            NumEvalTransactions = 5000
         };
         _miner = new Miner(logger, networkClient, _settings);
     }
@@ -41,7 +41,7 @@ public class MinerTests
         var cancellationToken = cancellationTokenSource.Token;
 
         stopwatch.Start();
-        cancellationTokenSource.CancelAfter(4000);
+        cancellationTokenSource.CancelAfter(2400);
         var actualTxs = _miner.DequeueTransactions(cancellationToken);
         stopwatch.Stop();
 
@@ -55,14 +55,14 @@ public class MinerTests
         var graphJsonWithId = """{"Id":"evalgraph","Activities":[{"Title":"Select papers","Pending":true,"Included":true,"Executed":false,"Enabled":true},{"Title":"Write introduction","Pending":true,"Included":true,"Executed":false,"Enabled":false},{"Title":"Write abstract","Pending":true,"Included":true,"Executed":false,"Enabled":false},{"Title":"Write conclusion","Pending":true,"Included":true,"Executed":false,"Enabled":true}],"Relations":[{"Type":2,"Source":"Select papers","Target":"Select papers"},{"Type":0,"Source":"Select papers","Target":"Write introduction"},{"Type":0,"Source":"Select papers","Target":"Write abstract"},{"Type":2,"Source":"Select papers","Target":"Write conclusion"},{"Type":1,"Source":"Write introduction","Target":"Write abstract"},{"Type":1,"Source":"Write conclusion","Target":"Write abstract"}],"Accepting":false}"""; 
 
         // Enqueue Create transactions
-        int sizeOfBlockchain = 1;
+        int sizeOfBlockchain = 10000;
         // Evaluated transactions dequeue/validation
         var stopwatch = new Stopwatch();
         var cancellationTokenSource = new CancellationTokenSource();
         var cancellationToken = cancellationTokenSource.Token;
         EnqueueTransactionsWithExecutions(graphJsonWithId, _settings.NumEvalTransactions, sizeOfBlockchain);
         stopwatch.Start();
-        cancellationTokenSource.CancelAfter(4000);
+        cancellationTokenSource.CancelAfter(2400);
         var actualTxs = _miner.DequeueTransactions(cancellationToken);
         stopwatch.Stop();
 
@@ -75,14 +75,9 @@ public class MinerTests
     public void TestValidation()
     {
         var graphJsonWithId = """{"Id":"evalgraph","Activities":[{"Title":"Select papers","Pending":true,"Included":true,"Executed":false,"Enabled":true},{"Title":"Write introduction","Pending":true,"Included":true,"Executed":false,"Enabled":false},{"Title":"Write abstract","Pending":true,"Included":true,"Executed":false,"Enabled":false},{"Title":"Write conclusion","Pending":true,"Included":true,"Executed":false,"Enabled":true}],"Relations":[{"Type":2,"Source":"Select papers","Target":"Select papers"},{"Type":0,"Source":"Select papers","Target":"Write introduction"},{"Type":0,"Source":"Select papers","Target":"Write abstract"},{"Type":2,"Source":"Select papers","Target":"Write conclusion"},{"Type":1,"Source":"Write introduction","Target":"Write abstract"},{"Type":1,"Source":"Write conclusion","Target":"Write abstract"}],"Accepting":false}"""; 
-
-        // Enqueue Create transactions
-        int sizeOfBlockchain = 1;
-        // Evaluated transactions dequeue/validation
-        var stopwatch = new Stopwatch();
         var cancellationTokenSource = new CancellationTokenSource();
         var cancellationToken = cancellationTokenSource.Token;
-        CreateTransactionsWithInvalidId(graphJsonWithId, _settings.NumEvalTransactions, sizeOfBlockchain);
+        CreateTransactionsWithInvalidId(graphJsonWithId, _settings.NumEvalTransactions, 1);
         var noTxs = _miner.DequeueTransactions(cancellationToken);
         Assert.AreEqual(0, noTxs.Count());
         EnqueueTransactionsWithExecutions(graphJsonWithId, 1000, 1);
@@ -92,25 +87,33 @@ public class MinerTests
 
     private Models.Graph CreateGraph()
     {
-        List<Models.Activity> activities = new List<Models.Activity>(){
-            new Models.Activity("Select papers", true, true, false), 
-            new Models.Activity("Write introduction", true, true, false), 
-            new Models.Activity("Write abstract", true, true, false), 
-            new Models.Activity("Write conclusion", true, true, false)};
-        List<Models.Relation> relations = new List<Models.Relation>(){
-            new Models.Relation(Models.RelationType.INCLUSION, "Select papers", "Select papers"),
-            new Models.Relation(Models.RelationType.CONDITION, "Select papers", "Write introduction"),
-            new Models.Relation(Models.RelationType.CONDITION, "Select papers", "Write abstract"),
-            new Models.Relation(Models.RelationType.INCLUSION, "Select papers", "Write conclusion"),
-            new Models.Relation(Models.RelationType.RESPONSE, "Write introduction", "Write abstract"),
-            new Models.Relation(Models.RelationType.RESPONSE, "Write conclusion", "Write abstract"),
-        };
+        var proposeDU = new Models.Activity("Propose - DU");
+        var proposeDE = new Models.Activity("Propose - DE");
+        var acceptDU = new Models.Activity("Accept - DU");
+        var acceptDE = new Models.Activity("Accept - DE");
+        var holdMeeting = new Models.Activity("Hold Meeting", true);
+        var activities = new List<Models.Activity> {proposeDU, proposeDE, acceptDU, acceptDE, holdMeeting};
+
+        var rel1 = new Models.Relation(Models.RelationType.CONDITION, proposeDU, proposeDE);
+        var rel2 = new Models.Relation(Models.RelationType.RESPONSE, proposeDU, acceptDE);
+        var rel3 = new Models.Relation(Models.RelationType.INCLUSION, proposeDU, acceptDE);
+        var rel4 = new Models.Relation(Models.RelationType.RESPONSE, proposeDE, acceptDU);
+        var rel5 = new Models.Relation(Models.RelationType.INCLUSION, proposeDE, acceptDU);
+        var rel6 = new Models.Relation(Models.RelationType.EXCLUSION, acceptDU, acceptDU);
+        var rel7 = new Models.Relation(Models.RelationType.EXCLUSION, acceptDU, acceptDE);
+        var rel8 = new Models.Relation(Models.RelationType.EXCLUSION, acceptDE, acceptDE);
+        var rel9 = new Models.Relation(Models.RelationType.EXCLUSION, acceptDE, acceptDU);
+        var rel10 = new Models.Relation(Models.RelationType.CONDITION, acceptDU, holdMeeting);
+        var rel11 = new Models.Relation(Models.RelationType.CONDITION, acceptDE, holdMeeting);
+        var relations = new List<Models.Relation> {rel1, rel2, rel3, rel4, rel5, rel6, rel7, rel8, rel9, rel10, rel11};
+
         return new Models.Graph(activities, relations);
     }
     private void EnqueueTransactions(int numTransactions) {
         for (int i = 0; i < numTransactions; i++) {
             Models.Graph graph = CreateGraph();
             var tx = new Transaction("eval", DCR.Action.Create, "", graph);
+            Console.WriteLine($"Graph is : {JsonConvert.SerializeObject(graph)}");
             _miner.HandleTransaction(tx);
         }
     }
@@ -118,7 +121,7 @@ public class MinerTests
         var graph = _graphSerializer.Deserialize(graphJsonWithId);
         var createTx = new Transaction("eval", DCR.Action.Create, "", graph);
         _miner.HandleTransaction(createTx);
-        HandleOtherGraphs(blockchainSize);
+        EnqueueTransactions(blockchainSize);
         for (int i = 0; i < numTransactions; i++) {
             var graphToUpdate = _graphSerializer.Deserialize(graphJsonWithId);
             graphToUpdate.Execute("Select papers");
@@ -130,7 +133,7 @@ public class MinerTests
         var graph = _graphSerializer.Deserialize(graphJsonWithId);
         var createTx = new Transaction("eval", DCR.Action.Create, "", graph);
         _miner.HandleTransaction(createTx);
-        HandleOtherGraphs(blockchainSize);
+        EnqueueTransactions(blockchainSize);
         for (int i = 0; i < numTransactions; i++) {
             var graphJsonWithWrongId = """{"Id":"Foo","Activities":[{"Title":"Select papers","Pending":true,"Included":true,"Executed":false,"Enabled":true},{"Title":"Write introduction","Pending":true,"Included":true,"Executed":false,"Enabled":false},{"Title":"Write abstract","Pending":true,"Included":true,"Executed":false,"Enabled":false},{"Title":"Write conclusion","Pending":true,"Included":true,"Executed":false,"Enabled":true}],"Relations":[{"Type":2,"Source":"Select papers","Target":"Select papers"},{"Type":0,"Source":"Select papers","Target":"Write introduction"},{"Type":0,"Source":"Select papers","Target":"Write abstract"},{"Type":2,"Source":"Select papers","Target":"Write conclusion"},{"Type":1,"Source":"Write introduction","Target":"Write abstract"},{"Type":1,"Source":"Write conclusion","Target":"Write abstract"}],"Accepting":false}"""; 
             var graphToUpdate = _graphSerializer.Deserialize(graphJsonWithWrongId);
@@ -138,16 +141,5 @@ public class MinerTests
             var tx = new Transaction("1", DCR.Action.Update, "Select papers", graphToUpdate);
             _miner.HandleTransaction(tx);
         }
-    }
-
-    private void HandleOtherGraphs(int blockchainSize)
-    {
-        for (int i = 1; i < blockchainSize; i++)
-        {
-            var graph = CreateGraph();
-            var createTx = new Transaction("eval", DCR.Action.Create, "", graph);
-            _miner.HandleTransaction(createTx);
-        }
-        _miner.Mine();
     }
 }
