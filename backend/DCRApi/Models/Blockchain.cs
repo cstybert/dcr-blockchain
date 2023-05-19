@@ -106,10 +106,15 @@ public class Blockchain
             {
                 if (transaction.Graph.Id == id) 
                 {
-                    return transaction.Graph;
+                    return DeepCopyGraph(transaction.Graph);
                 }
             }
         }
         return null;
+    }
+
+    public Graph DeepCopyGraph(Graph graph)
+    {
+        return _graphSerializer.Deserialize(_graphSerializer.Serialize(graph));
     }
 }

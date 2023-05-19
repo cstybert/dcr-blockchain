@@ -161,7 +161,7 @@ public abstract class AbstractNode
             else oldGraph = Blockchain.GetGraph(tx.Graph.Id)!;
             if (oldGraph is not null) {
                 
-                var expectedUpdatedGraph = _graphSerializer.Deserialize(_graphSerializer.Serialize(oldGraph));
+                var expectedUpdatedGraph = Blockchain.DeepCopyGraph(oldGraph);
                 expectedUpdatedGraph.Execute(tx.EntityTitle);
                 return tx.Graph.EqualsGraph(expectedUpdatedGraph);
             }
