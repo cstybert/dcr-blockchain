@@ -7,5 +7,6 @@ public class Settings
     public int NumberNeighbours;
     public int Difficulty;
     public int NumEvalTransactions;
+    public bool IsEval;
     
 }

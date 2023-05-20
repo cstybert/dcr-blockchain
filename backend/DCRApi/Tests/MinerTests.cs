@@ -11,7 +11,7 @@ public class MinerTests
     private BlockchainSerializer _blockchainSerializer;
     private Settings _settings;
     private Miner _miner;
-
+    private int _sizeOfBlockchain;
     [SetUp]
     public void Setup()
     {
@@ -24,53 +24,11 @@ public class MinerTests
             SizeOfBlocks = int.MaxValue,
             NumberNeighbours = 1,
             Difficulty = 0,
-            NumEvalTransactions = 5000
+            NumEvalTransactions = 10000,
+            IsEval = true
         };
+        _sizeOfBlockchain = 10000;
         _miner = new Miner(logger, networkClient, _settings);
-    }
-
-    [Test]
-    public void Evaluate_DequeueAndValidateTransactions_Create()
-    {
-        var stopwatch = new Stopwatch();
-        var cancellationTokenSource = new CancellationTokenSource();
-        var cancellationToken = cancellationTokenSource.Token;
-        var graph = CreateMeetingGraph();
-
-        // Enqueue transactions
-        EnqueueCreateTransactions(graph, _settings.NumEvalTransactions);
-
-        // Measure dequeue+validation time
-        stopwatch.Start();
-        cancellationTokenSource.CancelAfter(2400);
-        var actualTxs = _miner.DequeueTransactions(cancellationToken);
-        stopwatch.Stop();
-
-        Console.WriteLine($"Elapsed validation time: {stopwatch.Elapsed.TotalMilliseconds} ms");
-        Console.WriteLine($"Number of validated transactions: {actualTxs.Count()} / {_settings.NumEvalTransactions}");
-        Assert.AreEqual(_settings.NumEvalTransactions, actualTxs.Count());
-    }
-    [Test]
-    public void Evaluate_DequeueAndValidateTransactions_Execute()
-    {
-        var stopwatch = new Stopwatch();
-        var cancellationTokenSource = new CancellationTokenSource();
-        var cancellationToken = cancellationTokenSource.Token;
-        var graph = CreatePaperGraph("eval");
-
-        // Enqueue transactions
-        EnqueueCreateTransactions(graph, 10000);
-        EnqueueExecuteTransactions(graph, "Select papers", _settings.NumEvalTransactions);
-
-        // Measure dequeue+validation time
-        stopwatch.Start();
-        cancellationTokenSource.CancelAfter(2400);
-        var actualTxs = _miner.DequeueTransactions(cancellationToken);
-        stopwatch.Stop();
-
-        Console.WriteLine($"Elapsed validation time: {stopwatch.Elapsed.TotalMilliseconds} ms");
-        Console.WriteLine($"Number of validated transactions: {actualTxs.Count()} / {_settings.NumEvalTransactions}");
-        Assert.AreEqual(_settings.NumEvalTransactions, actualTxs.Count());
     }
 
     [Test]
@@ -81,10 +39,12 @@ public class MinerTests
         var graphFoo = CreatePaperGraph("foo");
 
         EnqueueCreateTransactions(graphFoo, 1);
+        var createTx = _miner.DequeueTransactions(cancellationToken);
+        MockMine(createTx);
         EnqueueExecuteTransactions(graphFoo, "Select papers", 1000);
         var validTxs = _miner.DequeueTransactions(cancellationToken);
 
-        Assert.AreEqual(1001, validTxs.Count());
+        Assert.AreEqual(1000, validTxs.Count());
     }
 
     [Test]
@@ -108,42 +68,38 @@ public class MinerTests
         var stopwatch = new Stopwatch();
         var cancellationTokenSource = new CancellationTokenSource();
         var cancellationToken = cancellationTokenSource.Token;
-        var graphFoo = CreatePaperGraph("foo");
-
         // Set up blockchain
-        EnqueueCreateTransactions(graphFoo, 1);
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < _sizeOfBlockchain; i++) {
             var fillerGraph = CreatePaperGraph(Guid.NewGuid().ToString());
             EnqueueCreateTransactionsWithId(i.ToString(), fillerGraph, 1);
         }
         var validTxs = _miner.DequeueTransactions(cancellationToken);
-        foreach (Transaction tx in validTxs) {
-            MockMine(new List<Transaction>{ tx });
-        }
-
-
+        MockMine(validTxs);
+        var graph = CreateMeetingGraph();
         // Measure ms of validating create with GraphIdLookupTable
-        EnqueueCreateTransactions(CreatePaperGraph(Guid.NewGuid().ToString()), 1);
+        EnqueueCreateTransactions(graph, _settings.NumEvalTransactions);
         
         stopwatch.Start();
-        _miner.DequeueTransactions(cancellationToken);
+        var validTxsBefore = _miner.DequeueTransactions(cancellationToken);
         stopwatch.Stop();
 
         var msWith = stopwatch.Elapsed.TotalMilliseconds;
 
         // Measure ms of execution without GraphIdLookupTable
-        EnqueueCreateTransactions(CreatePaperGraph(Guid.NewGuid().ToString()), 1);
+        EnqueueCreateTransactions(graph, _settings.NumEvalTransactions);
         _miner.Blockchain.DisableGraphIdLookupTable = true;
         stopwatch.Reset();
 
         stopwatch.Start();
-        _miner.DequeueTransactions(cancellationToken);
+        var validTxsAfter = _miner.DequeueTransactions(cancellationToken);
         stopwatch.Stop();
 
         var msWithout = stopwatch.Elapsed.TotalMilliseconds;
 
         Console.WriteLine($"{msWith} ms vs {msWithout} ms");
         Assert.IsTrue(msWith < msWithout);
+        Assert.IsTrue(validTxsBefore.Count == _settings.NumEvalTransactions);
+        Assert.IsTrue(validTxsAfter.Count == _settings.NumEvalTransactions);
     }
 
     [Test]
@@ -156,38 +112,38 @@ public class MinerTests
 
         // Set up blockchain
         EnqueueCreateTransactions(graphFoo, 1);
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < _sizeOfBlockchain; i++) {
             var fillerGraph = CreatePaperGraph(Guid.NewGuid().ToString());
             EnqueueCreateTransactionsWithId(i.ToString(), fillerGraph, 1);
         }
         var validTxs = _miner.DequeueTransactions(cancellationToken);
-        foreach (Transaction tx in validTxs) {
-            MockMine(new List<Transaction>{ tx });
-        }
+        MockMine(validTxs);
 
 
         // Measure ms of validating execution with GraphIdLookupTable
-        EnqueueExecuteTransactions(graphFoo, "Select papers", 1);
+        EnqueueExecuteTransactions(graphFoo, "Select papers", _settings.NumEvalTransactions);
         
         stopwatch.Start();
-        _miner.DequeueTransactions(cancellationToken);
+        var validTxsBefore = _miner.DequeueTransactions(cancellationToken);
         stopwatch.Stop();
 
         var msWith = stopwatch.Elapsed.TotalMilliseconds;
 
         // Measure ms of execution without GraphIdLookupTable
-        EnqueueExecuteTransactions(graphFoo, "Select papers", 1);
+        EnqueueExecuteTransactions(graphFoo, "Select papers", _settings.NumEvalTransactions);
         _miner.Blockchain.DisableGraphIdLookupTable = true;
         stopwatch.Reset();
 
         stopwatch.Start();
-        _miner.DequeueTransactions(cancellationToken);
+        var validTxsAfter = _miner.DequeueTransactions(cancellationToken);
         stopwatch.Stop();
 
         var msWithout = stopwatch.Elapsed.TotalMilliseconds;
 
         Console.WriteLine($"{msWith} ms vs {msWithout} ms");
         Assert.IsTrue(msWith < msWithout);
+        Assert.IsTrue(validTxsBefore.Count == _settings.NumEvalTransactions);
+        Assert.IsTrue(validTxsAfter.Count == _settings.NumEvalTransactions);
     }
 
     private void EnqueueCreateTransactionsWithId(string id, Graph graph, int numTransactions) {
