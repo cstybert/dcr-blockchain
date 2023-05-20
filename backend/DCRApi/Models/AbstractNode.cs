@@ -153,14 +153,11 @@ public abstract class AbstractNode
 
     protected bool IsValidTransaction(Transaction tx, List<Transaction> txs) {
         if (tx.Action == Action.Create) {
-            return tx.Graph.Id != "";
+            return tx.Graph.Id != "" && !Blockchain.GraphIdLookupTable.ContainsKey(tx.Graph.Id);
         } else {
-            Transaction? transaction = txs.FindLast(t => t.Graph.Id == tx.Graph.Id);
-            Graph oldGraph;
-            if (transaction is not null) oldGraph = transaction.Graph;
-            else oldGraph = Blockchain.GetGraph(tx.Graph.Id)!;
-            if (oldGraph is not null) {
-                
+            var transaction = txs.FindLast(t => t.Graph.Id == tx.Graph.Id);
+            var oldGraph = transaction is not null ? transaction.Graph : Blockchain.GetGraph(tx.Graph.Id);
+            if (oldGraph is not null) { 
                 var expectedUpdatedGraph = Blockchain.DeepCopyGraph(oldGraph);
                 expectedUpdatedGraph.Execute(tx.EntityTitle);
                 return tx.Graph.EqualsGraph(expectedUpdatedGraph);
