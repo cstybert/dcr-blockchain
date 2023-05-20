@@ -102,12 +102,61 @@ public class MinerTests
         Assert.AreEqual(1, validTxs.Count());
     }
 
-    private void EnqueueCreateTransactions(Graph graph, int numTransactions) {
+    [Test]
+    public void Test_TransactionValidation_GraphIdLookupTable()
+    {
+        var stopwatch = new Stopwatch();
+        var cancellationTokenSource = new CancellationTokenSource();
+        var cancellationToken = cancellationTokenSource.Token;
+        var graphFoo = CreatePaperGraph("foo");
+
+        // Set up blockchain
+        EnqueueCreateTransactions(graphFoo, 1);
+        for (int i = 0; i < 10000; i++) {
+            var fillerGraph = CreatePaperGraph(Guid.NewGuid().ToString());
+            EnqueueCreateTransactionsWithId(i.ToString(), fillerGraph, 1);
+        }
+        var validTxs = _miner.DequeueTransactions(cancellationToken);
+        foreach (Transaction tx in validTxs) {
+            MockMine(new List<Transaction>{ tx });
+        }
+
+
+        // Measure ms of validating execution with GraphIdLookupTable
+        EnqueueExecuteTransactions(graphFoo, "Select papers", 1);
+        
+        stopwatch.Start();
+        _miner.DequeueTransactions(cancellationToken);
+        stopwatch.Stop();
+
+        var msWith = stopwatch.Elapsed.TotalMilliseconds;
+
+        // Measure ms of execution without GraphIdLookupTable
+        EnqueueExecuteTransactions(graphFoo, "Select papers", 1);
+        _miner.Blockchain.DisableGraphIdLookupTable = true;
+        stopwatch.Reset();
+
+        stopwatch.Start();
+        _miner.DequeueTransactions(cancellationToken);
+        stopwatch.Stop();
+
+        var msWithout = stopwatch.Elapsed.TotalMilliseconds;
+
+        Console.WriteLine($"{msWith} ms vs {msWithout} ms");
+        Assert.IsTrue(msWith < msWithout);
+    }
+
+    private void EnqueueCreateTransactionsWithId(string id, Graph graph, int numTransactions) {
         for (int i = 0; i < numTransactions; i++) {
-            var tx = new Transaction("eval", DCR.Action.Create, "", graph);
+            var tx = new Transaction(id, DCR.Action.Create, "", graph);
             _miner.HandleTransaction(tx);
         }
     }
+
+    private void EnqueueCreateTransactions(Graph graph, int numTransactions) {
+        EnqueueCreateTransactionsWithId("eval", graph, numTransactions);
+    }
+
     private void EnqueueExecuteTransactions(Graph graph, string executeActivity, int numTransactions) {
         for (int i = 0; i < numTransactions; i++) {
             var graphToUpdate = _miner.Blockchain.DeepCopyGraph(graph);
@@ -115,6 +164,11 @@ public class MinerTests
             var tx = new Transaction("1", DCR.Action.Update, executeActivity, graphToUpdate);
             _miner.HandleTransaction(tx);
         }
+    }
+
+    private void MockMine(List<Transaction> txs) {
+        var block = new Block(txs) {Index = _miner.Blockchain.Chain.Count};
+        _miner.Blockchain.Append(block);
     }
 
     private Graph CreatePaperGraph(string id)

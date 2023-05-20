@@ -8,6 +8,7 @@ public class Blockchain
     private BlockchainSerializer _chainSerializer;
     private GraphSerializer _graphSerializer;
     public Dictionary<string, (int blockId, string transactionId)> GraphIdLookupTable;
+    public bool DisableGraphIdLookupTable;
 
     public Blockchain(int difficulty) 
     {
@@ -79,10 +80,12 @@ public class Blockchain
 
     public void RemoveRange(int index, int count)
     {
-        for (int i = index; i <= index + count; i++) {
-            var item = GraphIdLookupTable.SingleOrDefault(x => x.Value.blockId == i);
-            if (!item.Equals(default(KeyValuePair<string, (int, string)>))) {
-                GraphIdLookupTable.Remove(item.Key);
+        if (!DisableGraphIdLookupTable) {
+            for (int i = index; i <= index + count; i++) {
+                var item = GraphIdLookupTable.SingleOrDefault(x => x.Value.blockId == i);
+                if (!item.Equals(default(KeyValuePair<string, (int, string)>))) {
+                    GraphIdLookupTable.Remove(item.Key);
+                }
             }
         }
         _chain.RemoveRange(index, count);
@@ -90,7 +93,9 @@ public class Blockchain
     public void Append(Block block) 
     {
         _chain.Add(block);
-        UpdateGraphIdLookupTable(block);
+        if (!DisableGraphIdLookupTable) {
+            UpdateGraphIdLookupTable(block);
+        }
     }
 
     public void Append(List<Block> blocks) 
@@ -104,7 +109,9 @@ public class Blockchain
     public void Prepend(Block block) 
     {
         _chain = _chain.Prepend(block).ToList();
-        UpdateGraphIdLookupTable(block);
+        if (!DisableGraphIdLookupTable) {
+            UpdateGraphIdLookupTable(block);
+        }
     }
 
     public Block GetHead()
@@ -112,13 +119,27 @@ public class Blockchain
         return _chain[_chain.Count - 1];
     }
 
-    // Directly lookup blockId and transactionId in Blockchain, return graph
     public Graph? GetGraph(string id) 
     {
-        if (GraphIdLookupTable.TryGetValue(id, out (int blockId, string transactionId) idPair)) {
-            var graph = _chain[idPair.blockId].Transactions.Single(t => t.Id == idPair.transactionId)?.Graph;
-            return DeepCopyGraph(graph);
-        } else {
+        // Use GraphIdLookupTable to directly lookup blockId and transactionId in Blockchain and return graph
+        if (!DisableGraphIdLookupTable) {
+            if (GraphIdLookupTable.TryGetValue(id, out (int blockId, string transactionId) idPair)) {
+                var graph = _chain[idPair.blockId].Transactions.Single(t => t.Id == idPair.transactionId)?.Graph;
+                return DeepCopyGraph(graph);
+            } else {
+                return null;
+            }
+        } else { // Loop through every block and transaction (end to start) and return first occurence of graph
+            foreach (Block block in Enumerable.Reverse(_chain))
+            {
+                foreach (Transaction transaction in Enumerable.Reverse(block.Transactions))
+                {
+                    if (transaction.Graph.Id == id) 
+                    {
+                        return DeepCopyGraph(transaction.Graph);
+                    }
+                }
+            }
             return null;
         }
     }
@@ -128,6 +149,7 @@ public class Blockchain
         return _graphSerializer.Deserialize(_graphSerializer.Serialize(graph));
     }
 
+    // If graph already has an entry in GraphIdLookupTable, update it with new latest block/transaction location. Otherwise, create new entry.
     private void UpdateGraphIdLookupTable(Block block)
     {
         foreach (Transaction tx in block.Transactions) {
