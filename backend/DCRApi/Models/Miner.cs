@@ -28,6 +28,7 @@ public class Miner :  AbstractNode, IMiner
                 if (!_queue.Any(t => t.Id == tx.Id))
                 {
                     _queue.Enqueue(tx);
+                    HandledTransactions.Add(tx);
                 }
             }
         }

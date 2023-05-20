@@ -24,6 +24,7 @@ public class FullNode : AbstractNode
             {
                 if (!Blockchain.Chain.Any(b => b.Transactions.Any(t => t.Id == tx.Id)))
                 {
+                    HandledTransactions.Add(tx);
                     NetworkClient.BroadcastTransaction(tx);
                     AddPendingTransaction(tx);
                 }

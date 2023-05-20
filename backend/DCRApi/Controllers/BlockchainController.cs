@@ -62,7 +62,6 @@ public class BlockchainController : ControllerBase
         if (!_node.HandledTransactions.Any(tx => tx.Id == transaction.Id))
         {
             _node.HandleTransaction(transaction);
-            _node.HandledTransactions.Add(transaction);
         } else {
             Console.WriteLine("Transaction has already been handled (ignore).");
         }
