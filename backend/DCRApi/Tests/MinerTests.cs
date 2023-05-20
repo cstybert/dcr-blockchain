@@ -103,7 +103,51 @@ public class MinerTests
     }
 
     [Test]
-    public void Test_TransactionValidation_GraphIdLookupTable()
+    public void Test_TransactionValidation_GraphIdLookupTable_Create()
+    {
+        var stopwatch = new Stopwatch();
+        var cancellationTokenSource = new CancellationTokenSource();
+        var cancellationToken = cancellationTokenSource.Token;
+        var graphFoo = CreatePaperGraph("foo");
+
+        // Set up blockchain
+        EnqueueCreateTransactions(graphFoo, 1);
+        for (int i = 0; i < 10; i++) {
+            var fillerGraph = CreatePaperGraph(Guid.NewGuid().ToString());
+            EnqueueCreateTransactionsWithId(i.ToString(), fillerGraph, 1);
+        }
+        var validTxs = _miner.DequeueTransactions(cancellationToken);
+        foreach (Transaction tx in validTxs) {
+            MockMine(new List<Transaction>{ tx });
+        }
+
+
+        // Measure ms of validating create with GraphIdLookupTable
+        EnqueueCreateTransactions(CreatePaperGraph(Guid.NewGuid().ToString()), 1);
+        
+        stopwatch.Start();
+        _miner.DequeueTransactions(cancellationToken);
+        stopwatch.Stop();
+
+        var msWith = stopwatch.Elapsed.TotalMilliseconds;
+
+        // Measure ms of execution without GraphIdLookupTable
+        EnqueueCreateTransactions(CreatePaperGraph(Guid.NewGuid().ToString()), 1);
+        _miner.Blockchain.DisableGraphIdLookupTable = true;
+        stopwatch.Reset();
+
+        stopwatch.Start();
+        _miner.DequeueTransactions(cancellationToken);
+        stopwatch.Stop();
+
+        var msWithout = stopwatch.Elapsed.TotalMilliseconds;
+
+        Console.WriteLine($"{msWith} ms vs {msWithout} ms");
+        Assert.IsTrue(msWith < msWithout);
+    }
+
+    [Test]
+    public void Test_TransactionValidation_GraphIdLookupTable_Execute()
     {
         var stopwatch = new Stopwatch();
         var cancellationTokenSource = new CancellationTokenSource();
