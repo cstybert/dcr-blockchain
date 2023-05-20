@@ -24,10 +24,10 @@ public class MinerTests
             SizeOfBlocks = int.MaxValue,
             NumberNeighbours = 1,
             Difficulty = 0,
-            NumEvalTransactions = 10000,
+            NumEvalTransactions = 50000,
             IsEval = true
         };
-        _sizeOfBlockchain = 10000;
+        _sizeOfBlockchain = 20000;
         _miner = new Miner(logger, networkClient, _settings);
     }
 
@@ -95,8 +95,13 @@ public class MinerTests
         stopwatch.Stop();
 
         var msWithout = stopwatch.Elapsed.TotalMilliseconds;
-
-        Console.WriteLine($"{msWith} ms vs {msWithout} ms");
+        var validationTime = 2400;
+        Console.WriteLine("Total Time");
+        Console.WriteLine($"With : {msWith} ms  --  Without : {msWithout} ms");
+        Console.WriteLine("Time per transaction");
+        Console.WriteLine($"With : {msWith/_settings.NumEvalTransactions} ms  --  Without : {msWithout/_settings.NumEvalTransactions} ms");
+        Console.WriteLine("Theoretical Block Size");
+        Console.WriteLine($"With : {validationTime/(msWith/_settings.NumEvalTransactions)} --  Without : {validationTime/(msWithout/_settings.NumEvalTransactions)}");
         Assert.IsTrue(msWith < msWithout);
         Assert.IsTrue(validTxsBefore.Count == _settings.NumEvalTransactions);
         Assert.IsTrue(validTxsAfter.Count == _settings.NumEvalTransactions);
@@ -139,8 +144,13 @@ public class MinerTests
         stopwatch.Stop();
 
         var msWithout = stopwatch.Elapsed.TotalMilliseconds;
-
-        Console.WriteLine($"{msWith} ms vs {msWithout} ms");
+        var validationTime = 2400;
+        Console.WriteLine("Total Time");
+        Console.WriteLine($"With : {msWith} ms  --  Without : {msWithout} ms");
+        Console.WriteLine("Time per transaction");
+        Console.WriteLine($"With : {msWith/_settings.NumEvalTransactions} ms  --  Without : {msWithout/_settings.NumEvalTransactions} ms");
+        Console.WriteLine("Theoretical Block Size");
+        Console.WriteLine($"With : {validationTime/(msWith/_settings.NumEvalTransactions)} --  Without : {validationTime/(msWithout/_settings.NumEvalTransactions)}");
         Assert.IsTrue(msWith < msWithout);
         Assert.IsTrue(validTxsBefore.Count == _settings.NumEvalTransactions);
         Assert.IsTrue(validTxsAfter.Count == _settings.NumEvalTransactions);
