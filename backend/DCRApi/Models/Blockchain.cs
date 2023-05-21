@@ -7,7 +7,7 @@ public class Blockchain
     private int _difficulty;
     private BlockchainSerializer _chainSerializer;
     private GraphSerializer _graphSerializer;
-    public Dictionary<string, (int blockId, int index)> GraphIdLookupTable;
+    public Dictionary<string, (int blockIndex, int transactionIndex)> GraphIdLookupTable;
     public bool DisableGraphIdLookupTable;
 
     public Blockchain(int difficulty) 
@@ -82,7 +82,7 @@ public class Blockchain
     {
         if (!DisableGraphIdLookupTable) {
             for (int i = index; i <= index + count; i++) {
-                var item = GraphIdLookupTable.SingleOrDefault(x => x.Value.blockId == i);
+                var item = GraphIdLookupTable.SingleOrDefault(x => x.Value.blockIndex == i);
                 if (!item.Equals(default(KeyValuePair<string, (int, string)>))) {
                     GraphIdLookupTable.Remove(item.Key);
                 }
@@ -123,8 +123,8 @@ public class Blockchain
     {
         // Use GraphIdLookupTable to directly lookup blockId and transactionId in Blockchain and return graph
         if (!DisableGraphIdLookupTable) {
-            if (GraphIdLookupTable.TryGetValue(id, out (int blockId, int transactionIndex) idPair)) {
-                var graph = _chain[idPair.blockId].Transactions[idPair.transactionIndex].Graph;
+            if (GraphIdLookupTable.TryGetValue(id, out (int blockIndex, int transactionIndex) idPair)) {
+                var graph = _chain[idPair.blockIndex].Transactions[idPair.transactionIndex].Graph;
                 return DeepCopyGraph(graph);
             } else {
                 return null;

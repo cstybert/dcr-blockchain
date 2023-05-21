@@ -6,7 +6,5 @@ public class Settings
     public int SizeOfBlocks;
     public int NumberNeighbours;
     public int Difficulty;
-    public int NumEvalTransactions;
     public bool IsEval;
-    
 }
