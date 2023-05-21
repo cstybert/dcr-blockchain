@@ -150,12 +150,15 @@ public abstract class AbstractNode
             return true;
         }
     }
-
+    private bool GraphIdExists(Transaction tx)
+    {
+        return Blockchain.GetGraph(tx.Graph.Id) is not null;
+    }
     protected bool IsValidTransaction(Transaction tx, List<Transaction> txs) {
         if (tx.Action == Action.Create) {
-            return (tx.Graph.Id != "") && (Blockchain.DisableGraphIdLookupTable ? true : !Blockchain.GraphIdLookupTable.ContainsKey(tx.Graph.Id));
+            return (tx.Graph.Id != "") && (Blockchain.DisableGraphIdLookupTable ? !GraphIdExists(tx) : !Blockchain.GraphIdLookupTable.ContainsKey(tx.Graph.Id));
         } else {
-            var transaction = txs.FindLast(t => t.Graph.Id == tx.Graph.Id);
+            var transaction = _settings.IsEval ? null : txs.FindLast(t => t.Graph.Id == tx.Graph.Id);
             var oldGraph = transaction is not null ? transaction.Graph : Blockchain.GetGraph(tx.Graph.Id);
             if (oldGraph is not null) { 
                 var expectedUpdatedGraph = Blockchain.DeepCopyGraph(oldGraph);
