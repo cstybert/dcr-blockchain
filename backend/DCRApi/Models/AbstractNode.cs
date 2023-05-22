@@ -162,8 +162,7 @@ public abstract class AbstractNode
             var oldGraph = transaction is not null ? transaction.Graph : Blockchain.GetGraph(tx.Graph.Id);
             if (oldGraph is not null) { 
                 var expectedUpdatedGraph = Blockchain.DeepCopyGraph(oldGraph);
-                expectedUpdatedGraph.Execute(tx.EntityTitle);
-                return tx.Graph.EqualsGraph(expectedUpdatedGraph);
+                return expectedUpdatedGraph.Execute(tx.EntityTitle) && tx.Graph.EqualsGraph(expectedUpdatedGraph);
             }
             return false;
         }

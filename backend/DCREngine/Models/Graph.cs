@@ -57,9 +57,14 @@ namespace Models
         }
 
         // Execute activity in graph
-        public void Execute(string activity)
+        public bool Execute(string activity)
         {
             var source = GetActivity(activity);
+
+            if (!source.Enabled) {
+                return false;
+            }
+
             source.Executed = true;
             source.Pending = false;
 
@@ -83,6 +88,7 @@ namespace Models
             }
 
             UpdateActivitiesEnabled();
+            return true;
         }
 
         public bool EqualsGraph(Graph otherGraph)
