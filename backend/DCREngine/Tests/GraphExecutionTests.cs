@@ -39,6 +39,13 @@ public class GraphExecutionTests
         TestHelper.AssertActivityStatuses(graph, rejectPrescriptionTitle, true, true, false, true);
         TestHelper.AssertActivityStatuses(graph, administerMedicineTitle, false, false, true, false);
 
+        graph.Execute(prescribeMedicineTitle);
+        
+        TestHelper.AssertActivityStatuses(graph, prescribeMedicineTitle, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, signPrescriptionTitle, true, true, true, true);
+        TestHelper.AssertActivityStatuses(graph, rejectPrescriptionTitle, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, administerMedicineTitle, false, false, true, false);
+
         graph.Execute(signPrescriptionTitle);
 
         TestHelper.AssertActivityStatuses(graph, prescribeMedicineTitle, true, true, false, true);

@@ -36,6 +36,7 @@ public class MinerTests
         TestHelper.EnqueueCreateTransactions(_miner, graphFoo, 1);
         var createTx = _miner.DequeueTransactions(cancellationToken);
         TestHelper.MockMine(_miner, createTx);
+
         TestHelper.EnqueueExecuteTransactions(_miner, graphFoo, "Select papers", 1000);
         var validTxs = _miner.DequeueTransactions(cancellationToken);
 
@@ -43,16 +44,36 @@ public class MinerTests
     }
 
     /* 
-        Tests that validating 1000 invalid transactions results in 0 validated transactions
+        Tests that validating 1000 transactions targeting a non-existing graph ID results in 0 validated transactions
     */
     [Test]
-    public void Test_TransactionValidation_Invalid()
+    public void Test_TransactionValidation_InvalidGraph()
     {
         var cancellationTokenSource = new CancellationTokenSource();
         var cancellationToken = cancellationTokenSource.Token;
         var graphFoo = TestHelper.CreatePaperGraph("foo");
 
         TestHelper.EnqueueExecuteTransactions(_miner, graphFoo, "Select papers", 1000);
+        var validTxs = _miner.DequeueTransactions(cancellationToken);
+
+        Assert.AreEqual(0, validTxs.Count());
+    }
+
+    /* 
+        Tests that validating 1 transaction containing an invalid graph state results in 0 validated transactions
+    */
+    [Test]
+    public void Test_TransactionValidation_InvalidState()
+    {
+        var cancellationTokenSource = new CancellationTokenSource();
+        var cancellationToken = cancellationTokenSource.Token;
+        var graphFoo = TestHelper.CreatePaperGraph("foo");
+
+        TestHelper.EnqueueCreateTransactions(_miner, graphFoo, 1);
+        var createTx = _miner.DequeueTransactions(cancellationToken);
+        TestHelper.MockMine(_miner, createTx);
+
+        TestHelper.EnqueueExecuteTransactions(_miner, graphFoo, "Write abstract", 1);
         var validTxs = _miner.DequeueTransactions(cancellationToken);
 
         Assert.AreEqual(0, validTxs.Count());

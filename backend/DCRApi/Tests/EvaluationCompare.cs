@@ -36,7 +36,7 @@ public class EvaluationCompare
         for (int i = 0; i < sizeOfBlock; i++)
         {
             var fillerGraph = TestHelper.CreatePaperGraph(Guid.NewGuid().ToString());
-            TestHelper.EnqueueCreateTransactionsWithId(_miner, Guid.NewGuid().ToString(), fillerGraph, 1);
+            TestHelper.EnqueueCreateTransactions(_miner, fillerGraph, 1);
         }
         var validTxs = _miner.DequeueTransactions(cancellationToken);
         TestHelper.MockMine(_miner, validTxs);

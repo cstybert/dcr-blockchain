@@ -42,7 +42,7 @@ public class Evaluation
         // Set up blockchain
         for (int i = 0; i < _sizeOfBlock; i++) {
             var fillerGraph = TestHelper.CreatePaperGraph(Guid.NewGuid().ToString());
-            TestHelper.EnqueueCreateTransactionsWithId(_miner, i.ToString(), fillerGraph, 1);
+            TestHelper.EnqueueCreateTransactions(_miner, fillerGraph, 1);
         }
         var validTxs = _miner.DequeueTransactions(cancellationToken);
         TestHelper.MockMine(_miner, validTxs);
@@ -89,7 +89,7 @@ public class Evaluation
         TestHelper.EnqueueCreateTransactions(_miner, graphFoo, 1);
         for (int i = 0; i < _sizeOfBlock; i++) {
             var fillerGraph = TestHelper.CreatePaperGraph(Guid.NewGuid().ToString());
-            TestHelper.EnqueueCreateTransactionsWithId(_miner, i.ToString(), fillerGraph, 1);
+            TestHelper.EnqueueCreateTransactions(_miner, fillerGraph, 1);
         }
         var validTxs = _miner.DequeueTransactions(cancellationToken);
         TestHelper.MockMine(_miner, validTxs);
@@ -133,7 +133,7 @@ public class Evaluation
         // Set up blockchain
         for (int i = 0; i < _sizeOfBlockchain; i++) {
             var fillerGraph = TestHelper.CreatePaperGraph(Guid.NewGuid().ToString());
-            TestHelper.EnqueueCreateTransactionsWithId(_miner, i.ToString(), fillerGraph, 1);
+            TestHelper.EnqueueCreateTransactions(_miner, fillerGraph, 1);
         }
         var validTxs = _miner.DequeueTransactions(cancellationToken);
         foreach (Transaction tx in validTxs) {
@@ -182,7 +182,7 @@ public class Evaluation
         TestHelper.EnqueueCreateTransactions(_miner, graphFoo, 1);
         for (int i = 0; i < _sizeOfBlockchain; i++) {
             var fillerGraph = TestHelper.CreatePaperGraph(Guid.NewGuid().ToString());
-            TestHelper.EnqueueCreateTransactionsWithId(_miner, i.ToString(), fillerGraph, 1);
+            TestHelper.EnqueueCreateTransactions(_miner, fillerGraph, 1);
         }
         var validTxs = _miner.DequeueTransactions(cancellationToken);
         foreach (Transaction tx in validTxs) {
@@ -229,7 +229,7 @@ public class Evaluation
         for (int i = 0; i < _sizeOfBlockchain; i++) {
             for (int j = 0; j < _sizeOfBlock; j++) {
                 var fillerGraph = TestHelper.CreatePaperGraph(Guid.NewGuid().ToString());
-                TestHelper.EnqueueCreateTransactionsWithId(_miner, i.ToString(), fillerGraph, 1);
+                TestHelper.EnqueueCreateTransactions(_miner, fillerGraph, 1);
             }
             var validTxs = _miner.DequeueTransactions(cancellationToken);
             TestHelper.MockMine(_miner, validTxs);
@@ -278,7 +278,7 @@ public class Evaluation
         for (int i = 0; i < _sizeOfBlockchain; i++) {
             for (int j = 0; j < _sizeOfBlock; j++) {
                 var fillerGraph = TestHelper.CreatePaperGraph(Guid.NewGuid().ToString());
-                TestHelper.EnqueueCreateTransactionsWithId(_miner, i.ToString(), fillerGraph, 1);
+                TestHelper.EnqueueCreateTransactions(_miner, fillerGraph, 1);
             }
             var validTxs = _miner.DequeueTransactions(cancellationToken);
             TestHelper.MockMine(_miner, validTxs);

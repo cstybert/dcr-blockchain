@@ -5,15 +5,11 @@ namespace DCRApi.Tests;
 
 public static class TestHelper
 {
-    public static void EnqueueCreateTransactionsWithId(Miner miner, string transactionId, Graph graph, int numTransactions) {
+    public static void EnqueueCreateTransactions(Miner miner, Graph graph, int numTransactions) {
         for (int i = 0; i < numTransactions; i++) {
-            var tx = new Transaction(transactionId, DCR.Action.Create, "", graph);
+            var tx = new Transaction("1", DCR.Action.Create, "", graph);
             miner.HandleTransaction(tx);
         }
-    }
-
-    public static void EnqueueCreateTransactions(Miner miner, Graph graph, int numTransactions) {
-        EnqueueCreateTransactionsWithId(miner, "eval", graph, numTransactions);
     }
 
     public static void EnqueueExecuteTransactions(Miner miner, Graph graph, string executeActivity, int numTransactions) {
