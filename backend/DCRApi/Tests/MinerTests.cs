@@ -5,22 +5,18 @@ namespace DCRApi.Tests;
 
 public class MinerTests
 {
-    private Settings _settings;
     private Miner _miner;
 
     [SetUp]
     public void Setup()
     {
-        var logger = LoggerFactory.Create(logging => logging.AddConsole()).CreateLogger<Miner>();
-        var networkClient = new NetworkClient("localhost", 4300);
-        _settings = new Settings() {
-            TimeToSleep = 0,
-            SizeOfBlocks = int.MaxValue,
-            NumberNeighbours = 1,
-            Difficulty = 0,
-            IsEval = true
-        };
-        _miner = new Miner(logger, networkClient, _settings);
+        _miner = TestHelper.InitializeMiner();
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        TestHelper.ClearBlockchain($"blockchain{_miner.NetworkClient.ClientNode.Port}.json");
     }
 
     /* 

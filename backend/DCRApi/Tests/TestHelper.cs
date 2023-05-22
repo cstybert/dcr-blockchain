@@ -5,6 +5,22 @@ namespace DCRApi.Tests;
 
 public static class TestHelper
 {
+    public static Miner InitializeMiner()
+    {
+        var logger = LoggerFactory.Create(logging => logging.AddConsole()).CreateLogger<Miner>();
+        var networkClient = new NetworkClient("localhost", 4300);
+        var settings = new Settings() {
+            TimeToSleep = 0,
+            SizeOfBlocks = int.MaxValue,
+            NumberNeighbours = 1,
+            Difficulty = 0,
+            IsEval = true
+        };
+
+        var miner = new Miner(logger, networkClient, settings);
+        return miner;
+    }
+
     public static void EnqueueCreateTransactions(Miner miner, Graph graph, int numTransactions) {
         for (int i = 0; i < numTransactions; i++) {
             var tx = new Transaction("1", DCR.Action.Create, "", graph);
@@ -38,5 +54,14 @@ public static class TestHelper
         var graph = DCREngine.Tests.TestHelper.CreateMeetingGraph();
         graph.Id = graphId;
         return graph;
+    }
+
+    public static void ClearBlockchain(string blockchainFilename)
+    {
+        if (System.IO.File.Exists(blockchainFilename))
+        {
+            var fullPath = System.IO.Path.GetFullPath(blockchainFilename);
+            System.IO.File.Delete(fullPath);
+        }
     }
 }
