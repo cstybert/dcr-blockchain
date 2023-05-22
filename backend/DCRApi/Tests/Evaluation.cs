@@ -2,7 +2,7 @@ using NUnit.Framework;
 using System.Diagnostics;
 using DCR;
 
-namespace Tests;
+namespace DCRApi.Tests;
 
 public class Evaluation
 {
@@ -47,7 +47,7 @@ public class Evaluation
         var validTxs = _miner.DequeueTransactions(cancellationToken);
         TestHelper.MockMine(_miner, validTxs);
         
-        var graph = TestHelper.CreateMeetingGraph();
+        var graph = DCREngine.Tests.TestHelper.CreateMeetingGraph();
         // Measure ms of validating create with GraphIdLookupTable
         TestHelper.EnqueueCreateTransactions(_miner, graph, 1);
         
@@ -140,7 +140,7 @@ public class Evaluation
             TestHelper.MockMine(_miner, new List<Transaction>{ tx });
         }
         
-        var graph = TestHelper.CreateMeetingGraph();
+        var graph = DCREngine.Tests.TestHelper.CreateMeetingGraph();
         // Measure ms of validating create with GraphIdLookupTable
         TestHelper.EnqueueCreateTransactions(_miner, graph, 1);
         
@@ -235,7 +235,7 @@ public class Evaluation
             TestHelper.MockMine(_miner, validTxs);
         }
 
-        var graph = TestHelper.CreateMeetingGraph();
+        var graph = DCREngine.Tests.TestHelper.CreateMeetingGraph();
         // Measure ms of validating create with GraphIdLookupTable
         TestHelper.EnqueueCreateTransactions(_miner, graph, 1);
         
@@ -284,7 +284,7 @@ public class Evaluation
             TestHelper.MockMine(_miner, validTxs);
         }
 
-        var graph = TestHelper.CreateMeetingGraph();
+        var graph = DCREngine.Tests.TestHelper.CreateMeetingGraph();
         // Measure ms of validating create with GraphIdLookupTable
         TestHelper.EnqueueExecuteTransactions(_miner, graphFoo, "Select papers", 1);
         

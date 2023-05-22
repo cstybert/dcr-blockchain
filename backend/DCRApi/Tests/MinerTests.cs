@@ -1,7 +1,7 @@
 using NUnit.Framework;
 using DCR;
 
-namespace Tests;
+namespace DCRApi.Tests;
 
 public class MinerTests
 {

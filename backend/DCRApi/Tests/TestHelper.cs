@@ -1,7 +1,7 @@
 using DCR;
 using Models;
 
-namespace Tests;
+namespace DCRApi.Tests;
 
 public static class TestHelper
 {
@@ -32,47 +32,15 @@ public static class TestHelper
 
     public static Graph CreatePaperGraph(string graphId)
     {
-        var selectPapers = new Activity("Select papers", true);
-        var writeIntroduction = new Activity("Write introduction", true);
-        var writeAbstract = new Activity("Write abstract", true);
-        var writeConclusion = new Activity("Write conclusion", true);
-        var activities = new List<Activity> {selectPapers, writeIntroduction, writeAbstract, writeConclusion};
-
-        var rel1 = new Relation(RelationType.EXCLUSION, selectPapers, selectPapers);
-        var rel2 = new Relation(RelationType.CONDITION, selectPapers, writeIntroduction);
-        var rel3 = new Relation(RelationType.CONDITION, selectPapers, writeAbstract);
-        var rel4 = new Relation(RelationType.CONDITION, selectPapers, writeConclusion);
-        var rel5 = new Relation(RelationType.RESPONSE, writeIntroduction, writeAbstract);
-        var rel6 = new Relation(RelationType.RESPONSE, writeConclusion, writeAbstract);
-        var relations = new List<Relation> {rel1, rel2, rel3, rel4, rel5, rel6};
-
-        var graph = new Graph(activities, relations);
+        var graph = DCREngine.Tests.TestHelper.CreatePaperGraph();
         graph.Id = graphId;
         return graph;
     }
 
-    public static Graph CreateMeetingGraph()
+    public static Graph CreateMeetingGraph(string graphId)
     {
-        var proposeDU = new Models.Activity("Propose - DU");
-        var proposeDE = new Models.Activity("Propose - DE");
-        var acceptDU = new Models.Activity("Accept - DU");
-        var acceptDE = new Models.Activity("Accept - DE");
-        var holdMeeting = new Models.Activity("Hold Meeting", true);
-        var activities = new List<Models.Activity> {proposeDU, proposeDE, acceptDU, acceptDE, holdMeeting};
-
-        var rel1 = new Relation(RelationType.CONDITION, proposeDU, proposeDE);
-        var rel2 = new Relation(RelationType.RESPONSE, proposeDU, acceptDE);
-        var rel3 = new Relation(RelationType.INCLUSION, proposeDU, acceptDE);
-        var rel4 = new Relation(RelationType.RESPONSE, proposeDE, acceptDU);
-        var rel5 = new Relation(RelationType.INCLUSION, proposeDE, acceptDU);
-        var rel6 = new Relation(RelationType.EXCLUSION, acceptDU, acceptDU);
-        var rel7 = new Relation(RelationType.EXCLUSION, acceptDU, acceptDE);
-        var rel8 = new Relation(RelationType.EXCLUSION, acceptDE, acceptDE);
-        var rel9 = new Relation(RelationType.EXCLUSION, acceptDE, acceptDU);
-        var rel10 = new Relation(RelationType.CONDITION, acceptDU, holdMeeting);
-        var rel11 = new Relation(RelationType.CONDITION, acceptDE, holdMeeting);
-        var relations = new List<Relation> {rel1, rel2, rel3, rel4, rel5, rel6, rel7, rel8, rel9, rel10, rel11};
-
-        return new Graph(activities, relations);
+        var graph = DCREngine.Tests.TestHelper.CreateMeetingGraph();
+        graph.Id = graphId;
+        return graph;
     }
 }

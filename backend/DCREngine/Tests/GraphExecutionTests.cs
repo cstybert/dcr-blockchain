@@ -1,6 +1,6 @@
 using NUnit.Framework;
-using Models;
-namespace Tests;
+
+namespace DCREngine.Tests;
 
 public class GraphExecutionTests
 {
@@ -9,157 +9,96 @@ public class GraphExecutionTests
     {
     }
 
-    // TEST: Example from REBS 2020 - Lecture 1, slide 31
+    [Test]
+    public void Execute_MedicineGraph()
+    {
+        var graph = TestHelper.CreateMedicineGraph();
+        var prescribeMedicineTitle = "Prescribe medicine";
+        var signPrescriptionTitle = "Sign prescription";
+        var administerMedicineTitle = "Administer medicine";
+        var rejectPrescriptionTitle = "Reject prescription";
+
+        graph.Execute(prescribeMedicineTitle);
+
+        TestHelper.AssertActivityStatuses(graph, prescribeMedicineTitle, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, signPrescriptionTitle, true, false, true, true);
+        TestHelper.AssertActivityStatuses(graph, rejectPrescriptionTitle, false, false, false, true);
+        TestHelper.AssertActivityStatuses(graph, administerMedicineTitle, false, false, true, true);
+
+        graph.Execute(signPrescriptionTitle);
+
+        TestHelper.AssertActivityStatuses(graph, prescribeMedicineTitle, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, signPrescriptionTitle, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, rejectPrescriptionTitle, true, false, false, true);
+        TestHelper.AssertActivityStatuses(graph, administerMedicineTitle, true, false, true, true);
+
+        graph.Execute(rejectPrescriptionTitle);
+
+        TestHelper.AssertActivityStatuses(graph, prescribeMedicineTitle, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, signPrescriptionTitle, true, true, true, true);
+        TestHelper.AssertActivityStatuses(graph, rejectPrescriptionTitle, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, administerMedicineTitle, false, false, true, false);
+
+        graph.Execute(signPrescriptionTitle);
+
+        TestHelper.AssertActivityStatuses(graph, prescribeMedicineTitle, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, signPrescriptionTitle, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, rejectPrescriptionTitle, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, administerMedicineTitle, true, false, true, true);
+
+        graph.Execute(administerMedicineTitle);
+
+        TestHelper.AssertActivityStatuses(graph, prescribeMedicineTitle, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, signPrescriptionTitle, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, rejectPrescriptionTitle, false, true, false, false);
+        TestHelper.AssertActivityStatuses(graph, administerMedicineTitle, true, true, false, true);
+
+        Assert.AreEqual(true, graph.Accepting);
+    }
+
     [Test]
     public void Execute_PaperGraph()
     {
-        var selectPapers = new Activity("Select papers", true);
-        var writeIntroduction = new Activity("Write introduction", true);
-        var writeAbstract = new Activity("Write abstract", true);
-        var writeConclusion = new Activity("Write conclusion", true);
-        var activities = new List<Activity> {selectPapers, writeIntroduction, writeAbstract, writeConclusion};
+        var graph = TestHelper.CreatePaperGraph();
+        var selectPapersTitle = "Select papers";
+        var writeIntroductionTitle = "Write introduction";
+        var writeConclusionTitle = "Write conclusion";
+        var writeAbstractTitle = "Write abstract";
 
-        var rel1 = new Relation(RelationType.EXCLUSION, selectPapers, selectPapers);
-        var rel2 = new Relation(RelationType.CONDITION, selectPapers, writeIntroduction);
-        var rel3 = new Relation(RelationType.CONDITION, selectPapers, writeAbstract);
-        var rel4 = new Relation(RelationType.CONDITION, selectPapers, writeConclusion);
-        var rel5 = new Relation(RelationType.RESPONSE, writeIntroduction, writeAbstract);
-        var rel6 = new Relation(RelationType.RESPONSE, writeConclusion, writeAbstract);
-        var relations = new List<Relation> {rel1, rel2, rel3, rel4, rel5, rel6};
+        graph.Execute(selectPapersTitle);
 
-        var graph = new Graph(activities, relations);
-        Assert.AreEqual(4, graph.Activities.Count);
-        Assert.AreEqual(6, graph.Relations.Count);
+        TestHelper.AssertActivityStatuses(graph, selectPapersTitle, false, true, false, false);
+        TestHelper.AssertActivityStatuses(graph, writeIntroductionTitle, true, false, true, true);
+        TestHelper.AssertActivityStatuses(graph, writeConclusionTitle, true, false, true, true);
+        TestHelper.AssertActivityStatuses(graph, writeAbstractTitle, true, false, true, true);
 
-        Assert.AreEqual(true, selectPapers.Pending);
-        Assert.AreEqual(true, selectPapers.Included);
-        Assert.AreEqual(false, selectPapers.Executed);
-        Assert.AreEqual(true, selectPapers.Enabled);
+        graph.Execute(writeIntroductionTitle);
 
-        Assert.AreEqual(true, writeIntroduction.Pending);
-        Assert.AreEqual(true, writeIntroduction.Included);
-        Assert.AreEqual(false, writeIntroduction.Executed);
-        Assert.AreEqual(false, writeIntroduction.Enabled);
+        TestHelper.AssertActivityStatuses(graph, selectPapersTitle, false, true, false, false);
+        TestHelper.AssertActivityStatuses(graph, writeIntroductionTitle, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, writeConclusionTitle, true, false, true, true);
+        TestHelper.AssertActivityStatuses(graph, writeAbstractTitle, true, false, true, true);
 
-        Assert.AreEqual(true, writeAbstract.Pending);
-        Assert.AreEqual(true, writeAbstract.Included);
-        Assert.AreEqual(false, writeAbstract.Executed);
-        Assert.AreEqual(false, writeAbstract.Enabled);
+        graph.Execute(writeAbstractTitle);
 
-        Assert.AreEqual(true, writeConclusion.Pending);
-        Assert.AreEqual(true, writeConclusion.Included);
-        Assert.AreEqual(false, writeConclusion.Executed);
-        Assert.AreEqual(false, writeConclusion.Enabled);
+        TestHelper.AssertActivityStatuses(graph, selectPapersTitle, false, true, false, false);
+        TestHelper.AssertActivityStatuses(graph, writeIntroductionTitle, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, writeConclusionTitle, true, false, true, true);
+        TestHelper.AssertActivityStatuses(graph, writeAbstractTitle, true, true, false, true);
 
-        graph.Execute(selectPapers.Title);
+        graph.Execute(writeConclusionTitle);
 
-        Assert.AreEqual(false, selectPapers.Pending);
-        Assert.AreEqual(false, selectPapers.Included);
-        Assert.AreEqual(true, selectPapers.Executed);
-        Assert.AreEqual(false, selectPapers.Enabled);
+        TestHelper.AssertActivityStatuses(graph, selectPapersTitle, false, true, false, false);
+        TestHelper.AssertActivityStatuses(graph, writeIntroductionTitle, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, writeConclusionTitle, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, writeAbstractTitle, true, true, true, true);
 
-        Assert.AreEqual(true, writeIntroduction.Pending);
-        Assert.AreEqual(true, writeIntroduction.Included);
-        Assert.AreEqual(false, writeIntroduction.Executed);
-        Assert.AreEqual(true, writeIntroduction.Enabled);
+        graph.Execute(writeAbstractTitle);
 
-        Assert.AreEqual(true, writeAbstract.Pending);
-        Assert.AreEqual(true, writeAbstract.Included);
-        Assert.AreEqual(false, writeAbstract.Executed);
-        Assert.AreEqual(true, writeAbstract.Enabled);
-
-        Assert.AreEqual(true, writeConclusion.Pending);
-        Assert.AreEqual(true, writeConclusion.Included);
-        Assert.AreEqual(false, writeConclusion.Executed);
-        Assert.AreEqual(true, writeConclusion.Enabled);
-
-        graph.Execute(writeIntroduction.Title);
-
-        Assert.AreEqual(false, selectPapers.Pending);
-        Assert.AreEqual(false, selectPapers.Included);
-        Assert.AreEqual(true, selectPapers.Executed);
-        Assert.AreEqual(false, selectPapers.Enabled);
-
-        Assert.AreEqual(false, writeIntroduction.Pending);
-        Assert.AreEqual(true, writeIntroduction.Included);
-        Assert.AreEqual(true, writeIntroduction.Executed);
-        Assert.AreEqual(true, writeIntroduction.Enabled);
-
-        Assert.AreEqual(true, writeAbstract.Pending);
-        Assert.AreEqual(true, writeAbstract.Included);
-        Assert.AreEqual(false, writeAbstract.Executed);
-        Assert.AreEqual(true, writeAbstract.Enabled);
-
-        Assert.AreEqual(true, writeConclusion.Pending);
-        Assert.AreEqual(true, writeConclusion.Included);
-        Assert.AreEqual(false, writeConclusion.Executed);
-        Assert.AreEqual(true, writeConclusion.Enabled);
-
-        graph.Execute(writeAbstract.Title);
-
-        Assert.AreEqual(false, selectPapers.Pending);
-        Assert.AreEqual(false, selectPapers.Included);
-        Assert.AreEqual(true, selectPapers.Executed);
-        Assert.AreEqual(false, selectPapers.Enabled);
-
-        Assert.AreEqual(false, writeIntroduction.Pending);
-        Assert.AreEqual(true, writeIntroduction.Included);
-        Assert.AreEqual(true, writeIntroduction.Executed);
-        Assert.AreEqual(true, writeIntroduction.Enabled);
-
-        Assert.AreEqual(false, writeAbstract.Pending);
-        Assert.AreEqual(true, writeAbstract.Included);
-        Assert.AreEqual(true, writeAbstract.Executed);
-        Assert.AreEqual(true, writeAbstract.Enabled);
-
-        Assert.AreEqual(true, writeConclusion.Pending);
-        Assert.AreEqual(true, writeConclusion.Included);
-        Assert.AreEqual(false, writeConclusion.Executed);
-        Assert.AreEqual(true, writeConclusion.Enabled);
-        
-        graph.Execute(writeConclusion.Title);
-
-        Assert.AreEqual(false, selectPapers.Pending);
-        Assert.AreEqual(false, selectPapers.Included);
-        Assert.AreEqual(true, selectPapers.Executed);
-        Assert.AreEqual(false, selectPapers.Enabled);
-
-        Assert.AreEqual(false, writeIntroduction.Pending);
-        Assert.AreEqual(true, writeIntroduction.Included);
-        Assert.AreEqual(true, writeIntroduction.Executed);
-        Assert.AreEqual(true, writeIntroduction.Enabled);
-
-        Assert.AreEqual(true, writeAbstract.Pending);
-        Assert.AreEqual(true, writeAbstract.Included);
-        Assert.AreEqual(true, writeAbstract.Executed);
-        Assert.AreEqual(true, writeAbstract.Enabled);
-
-        Assert.AreEqual(false, writeConclusion.Pending);
-        Assert.AreEqual(true, writeConclusion.Included);
-        Assert.AreEqual(true, writeConclusion.Executed);
-        Assert.AreEqual(true, writeConclusion.Enabled);
-
-        graph.Execute(writeAbstract.Title);
-
-        Assert.AreEqual(false, selectPapers.Pending);
-        Assert.AreEqual(false, selectPapers.Included);
-        Assert.AreEqual(true, selectPapers.Executed);
-        Assert.AreEqual(false, selectPapers.Enabled);
-
-        Assert.AreEqual(false, writeIntroduction.Pending);
-        Assert.AreEqual(true, writeIntroduction.Included);
-        Assert.AreEqual(true, writeIntroduction.Executed);
-        Assert.AreEqual(true, writeIntroduction.Enabled);
-
-        Assert.AreEqual(false, writeAbstract.Pending);
-        Assert.AreEqual(true, writeAbstract.Included);
-        Assert.AreEqual(true, writeAbstract.Executed);
-        Assert.AreEqual(true, writeAbstract.Enabled);
-
-        Assert.AreEqual(false, writeConclusion.Pending);
-        Assert.AreEqual(true, writeConclusion.Included);
-        Assert.AreEqual(true, writeConclusion.Executed);
-        Assert.AreEqual(true, writeConclusion.Enabled);
+        TestHelper.AssertActivityStatuses(graph, selectPapersTitle, false, true, false, false);
+        TestHelper.AssertActivityStatuses(graph, writeIntroductionTitle, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, writeConclusionTitle, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, writeAbstractTitle, true, true, false, true);
 
         Assert.AreEqual(true, graph.Accepting);
     }
@@ -167,189 +106,52 @@ public class GraphExecutionTests
     [Test]
     public void Execute_MeetingGraph()
     {
-        var proposeDU = new Activity("Propose - DU");
-        var proposeDE = new Activity("Propose - DE");
-        var acceptDU = new Activity("Accept - DU");
-        var acceptDE = new Activity("Accept - DE");
-        var holdMeeting = new Activity("Hold Meeting", true);
-        var activities = new List<Activity> {proposeDU, proposeDE, acceptDU, acceptDE, holdMeeting};
+        var graph = TestHelper.CreateMeetingGraph();
+        var proposeE1Title = "Propose - E1";
+        var proposeE2Title = "Propose - E2";
+        var acceptE1Title = "Accept - E1";
+        var acceptE2Title = "Accept - E2";
+        var holdMeetingTitle = "Hold meeting";
 
-        var rel1 = new Relation(RelationType.CONDITION, proposeDU, proposeDE);
-        var rel2 = new Relation(RelationType.RESPONSE, proposeDU, acceptDE);
-        var rel3 = new Relation(RelationType.INCLUSION, proposeDU, acceptDE);
-        var rel4 = new Relation(RelationType.RESPONSE, proposeDE, acceptDU);
-        var rel5 = new Relation(RelationType.INCLUSION, proposeDE, acceptDU);
-        var rel6 = new Relation(RelationType.EXCLUSION, acceptDU, acceptDU);
-        var rel7 = new Relation(RelationType.EXCLUSION, acceptDU, acceptDE);
-        var rel8 = new Relation(RelationType.EXCLUSION, acceptDE, acceptDE);
-        var rel9 = new Relation(RelationType.EXCLUSION, acceptDE, acceptDU);
-        var rel10 = new Relation(RelationType.CONDITION, acceptDU, holdMeeting);
-        var rel11 = new Relation(RelationType.CONDITION, acceptDE, holdMeeting);
-        var relations = new List<Relation> {rel1, rel2, rel3, rel4, rel5, rel6, rel7, rel8, rel9, rel10, rel11};
+        graph.Execute(proposeE1Title);
 
-        var graph = new Graph(activities, relations);
-        Assert.AreEqual(5, graph.Activities.Count);
-        Assert.AreEqual(11, graph.Relations.Count);
+        TestHelper.AssertActivityStatuses(graph, proposeE1Title, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, proposeE2Title, true, false, false, true);
+        TestHelper.AssertActivityStatuses(graph, acceptE1Title, false, false, false, false);
+        TestHelper.AssertActivityStatuses(graph, acceptE2Title, true, false, true, true);
+        TestHelper.AssertActivityStatuses(graph, holdMeetingTitle, false, false, true, false);
 
-        Assert.AreEqual(false, proposeDU.Pending);
-        Assert.AreEqual(true, proposeDU.Included);
-        Assert.AreEqual(false, proposeDU.Executed);
-        Assert.AreEqual(true, proposeDU.Enabled);
+        graph.Execute(acceptE2Title);
 
-        Assert.AreEqual(false, proposeDE.Pending);
-        Assert.AreEqual(true, proposeDE.Included);
-        Assert.AreEqual(false, proposeDE.Executed);
-        Assert.AreEqual(false, proposeDE.Enabled);
+        TestHelper.AssertActivityStatuses(graph, proposeE1Title, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, proposeE2Title, true, false, false, true);
+        TestHelper.AssertActivityStatuses(graph, acceptE1Title, false, false, false, false);
+        TestHelper.AssertActivityStatuses(graph, acceptE2Title, false, true, false, false);
+        TestHelper.AssertActivityStatuses(graph, holdMeetingTitle, true, false, true, true);
 
-        Assert.AreEqual(false, acceptDU.Pending);
-        Assert.AreEqual(true, acceptDU.Included);
-        Assert.AreEqual(false, acceptDU.Executed);
-        Assert.AreEqual(true, acceptDU.Enabled);
+        graph.Execute(proposeE2Title);
 
-        Assert.AreEqual(false, acceptDE.Pending);
-        Assert.AreEqual(true, acceptDE.Included);
-        Assert.AreEqual(false, acceptDE.Executed);
-        Assert.AreEqual(true, acceptDE.Enabled);
+        TestHelper.AssertActivityStatuses(graph, proposeE1Title, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, proposeE2Title, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, acceptE1Title, true, false, true, true);
+        TestHelper.AssertActivityStatuses(graph, acceptE2Title, false, true, false, false);
+        TestHelper.AssertActivityStatuses(graph, holdMeetingTitle, false, false, true, true);
 
-        Assert.AreEqual(true, holdMeeting.Pending);
-        Assert.AreEqual(true, holdMeeting.Included);
-        Assert.AreEqual(false, holdMeeting.Executed);
-        Assert.AreEqual(false, holdMeeting.Enabled);
+        graph.Execute(acceptE1Title);
 
-        graph.Execute(proposeDU.Title);
+        TestHelper.AssertActivityStatuses(graph, proposeE1Title, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, proposeE2Title, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, acceptE1Title, false, true, false, false);
+        TestHelper.AssertActivityStatuses(graph, acceptE2Title, false, true, false, false);
+        TestHelper.AssertActivityStatuses(graph, holdMeetingTitle, true, false, true, true);
 
-        Assert.AreEqual(false, proposeDU.Pending);
-        Assert.AreEqual(true, proposeDU.Included);
-        Assert.AreEqual(true, proposeDU.Executed);
-        Assert.AreEqual(true, proposeDU.Enabled);
+        graph.Execute(holdMeetingTitle);
 
-        Assert.AreEqual(false, proposeDE.Pending);
-        Assert.AreEqual(true, proposeDE.Included);
-        Assert.AreEqual(false, proposeDE.Executed);
-        Assert.AreEqual(true, proposeDE.Enabled);
-
-        Assert.AreEqual(false, acceptDU.Pending);
-        Assert.AreEqual(true, acceptDU.Included);
-        Assert.AreEqual(false, acceptDU.Executed);
-        Assert.AreEqual(true, acceptDU.Enabled);
-
-        Assert.AreEqual(true, acceptDE.Pending);
-        Assert.AreEqual(true, acceptDE.Included);
-        Assert.AreEqual(false, acceptDE.Executed);
-        Assert.AreEqual(true, acceptDE.Enabled);
-
-        Assert.AreEqual(true, holdMeeting.Pending);
-        Assert.AreEqual(true, holdMeeting.Included);
-        Assert.AreEqual(false, holdMeeting.Executed);
-        Assert.AreEqual(false, holdMeeting.Enabled);
-
-        graph.Execute(acceptDU.Title);
-
-        Assert.AreEqual(false, proposeDU.Pending);
-        Assert.AreEqual(true, proposeDU.Included);
-        Assert.AreEqual(true, proposeDU.Executed);
-        Assert.AreEqual(true, proposeDU.Enabled);
-
-        Assert.AreEqual(false, proposeDE.Pending);
-        Assert.AreEqual(true, proposeDE.Included);
-        Assert.AreEqual(false, proposeDE.Executed);
-        Assert.AreEqual(true, proposeDE.Enabled);
-
-        Assert.AreEqual(false, acceptDU.Pending);
-        Assert.AreEqual(false, acceptDU.Included);
-        Assert.AreEqual(true, acceptDU.Executed);
-        Assert.AreEqual(false, acceptDU.Enabled);
-
-        Assert.AreEqual(true, acceptDE.Pending);
-        Assert.AreEqual(false, acceptDE.Included);
-        Assert.AreEqual(false, acceptDE.Executed);
-        Assert.AreEqual(false, acceptDE.Enabled);
-
-        Assert.AreEqual(true, holdMeeting.Pending);
-        Assert.AreEqual(true, holdMeeting.Included);
-        Assert.AreEqual(false, holdMeeting.Executed);
-        Assert.AreEqual(true, holdMeeting.Enabled);
-
-        graph.Execute(proposeDE.Title);
-        
-        Assert.AreEqual(false, proposeDU.Pending);
-        Assert.AreEqual(true, proposeDU.Included);
-        Assert.AreEqual(true, proposeDU.Executed);
-        Assert.AreEqual(true, proposeDU.Enabled);
-
-        Assert.AreEqual(false, proposeDE.Pending);
-        Assert.AreEqual(true, proposeDE.Included);
-        Assert.AreEqual(true, proposeDE.Executed);
-        Assert.AreEqual(true, proposeDE.Enabled);
-
-        Assert.AreEqual(true, acceptDU.Pending);
-        Assert.AreEqual(true, acceptDU.Included);
-        Assert.AreEqual(true, acceptDU.Executed);
-        Assert.AreEqual(true, acceptDU.Enabled);
-
-        Assert.AreEqual(true, acceptDE.Pending);
-        Assert.AreEqual(false, acceptDE.Included);
-        Assert.AreEqual(false, acceptDE.Executed);
-        Assert.AreEqual(false, acceptDE.Enabled);
-
-        Assert.AreEqual(true, holdMeeting.Pending);
-        Assert.AreEqual(true, holdMeeting.Included);
-        Assert.AreEqual(false, holdMeeting.Executed);
-        Assert.AreEqual(true, holdMeeting.Enabled);
-
-        graph.Execute(acceptDU.Title);
-
-        Assert.AreEqual(false, proposeDU.Pending);
-        Assert.AreEqual(true, proposeDU.Included);
-        Assert.AreEqual(true, proposeDU.Executed);
-        Assert.AreEqual(true, proposeDU.Enabled);
-
-        Assert.AreEqual(false, proposeDE.Pending);
-        Assert.AreEqual(true, proposeDE.Included);
-        Assert.AreEqual(true, proposeDE.Executed);
-        Assert.AreEqual(true, proposeDE.Enabled);
-
-        Assert.AreEqual(false, acceptDU.Pending);
-        Assert.AreEqual(false, acceptDU.Included);
-        Assert.AreEqual(true, acceptDU.Executed);
-        Assert.AreEqual(false, acceptDU.Enabled);
-
-        Assert.AreEqual(true, acceptDE.Pending);
-        Assert.AreEqual(false, acceptDE.Included);
-        Assert.AreEqual(false, acceptDE.Executed);
-        Assert.AreEqual(false, acceptDE.Enabled);
-
-        Assert.AreEqual(true, holdMeeting.Pending);
-        Assert.AreEqual(true, holdMeeting.Included);
-        Assert.AreEqual(false, holdMeeting.Executed);
-        Assert.AreEqual(true, holdMeeting.Enabled);
-
-        graph.Execute(holdMeeting.Title);
-
-        Assert.AreEqual(false, proposeDU.Pending);
-        Assert.AreEqual(true, proposeDU.Included);
-        Assert.AreEqual(true, proposeDU.Executed);
-        Assert.AreEqual(true, proposeDU.Enabled);
-
-        Assert.AreEqual(false, proposeDE.Pending);
-        Assert.AreEqual(true, proposeDE.Included);
-        Assert.AreEqual(true, proposeDE.Executed);
-        Assert.AreEqual(true, proposeDE.Enabled);
-
-        Assert.AreEqual(false, acceptDU.Pending);
-        Assert.AreEqual(false, acceptDU.Included);
-        Assert.AreEqual(true, acceptDU.Executed);
-        Assert.AreEqual(false, acceptDU.Enabled);
-
-        Assert.AreEqual(true, acceptDE.Pending);
-        Assert.AreEqual(false, acceptDE.Included);
-        Assert.AreEqual(false, acceptDE.Executed);
-        Assert.AreEqual(false, acceptDE.Enabled);
-
-        Assert.AreEqual(false, holdMeeting.Pending);
-        Assert.AreEqual(true, holdMeeting.Included);
-        Assert.AreEqual(true, holdMeeting.Executed);
-        Assert.AreEqual(true, holdMeeting.Enabled);
+        TestHelper.AssertActivityStatuses(graph, proposeE1Title, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, proposeE2Title, true, true, false, true);
+        TestHelper.AssertActivityStatuses(graph, acceptE1Title, false, true, false, false);
+        TestHelper.AssertActivityStatuses(graph, acceptE2Title, false, true, false, false);
+        TestHelper.AssertActivityStatuses(graph, holdMeetingTitle, true, true, false, true);
 
         Assert.AreEqual(true, graph.Accepting);
     }

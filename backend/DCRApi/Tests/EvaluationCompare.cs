@@ -2,7 +2,7 @@ using NUnit.Framework;
 using System.Diagnostics;
 using DCR;
 
-namespace Tests;
+namespace DCRApi.Tests;
 
 public class EvaluationCompare
 {
@@ -68,7 +68,7 @@ public class EvaluationCompare
             PopulateFillerBlock(cancellationToken, _sizeOfBlock);
         }
 
-        var graph = TestHelper.CreateMeetingGraph();
+        var graph = DCREngine.Tests.TestHelper.CreateMeetingGraph();
         // Measure ms of validating create with GraphIdLookupTable
         TestHelper.EnqueueCreateTransactions(_miner, graph, _numEvalTransactions);
 
@@ -94,7 +94,7 @@ public class EvaluationCompare
             PopulateFillerBlock(cancellationToken, _sizeOfBlock);
         }
 
-        var graph = TestHelper.CreateMeetingGraph();
+        var graph = DCREngine.Tests.TestHelper.CreateMeetingGraph();
         TestHelper.EnqueueExecuteTransactions(_miner, graphFoo, "Select papers", _numEvalTransactions);
         stopwatch.Start();
         var validTxsBefore = _miner.DequeueTransactions(cancellationToken);
