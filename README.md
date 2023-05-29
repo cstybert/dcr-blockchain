@@ -15,7 +15,7 @@ Example use case: `./start-miner.sh 4300` starts a miner process on port `4300`.
 
 ### FullNode
 A full node is responsible for generating transactions and propagating these throughout the network. This node consists of a frontend user interface and a backend node process.
-To start a full node, run the `start-node.sh` script like so: `./start-node.sh [FrontendPort] [BackendPort]`
+To start a full node, run the `start-node.sh` script like so: `./start-node.sh [FrontendPort] [BackendPort]`.
 Example use case: `./start-node.sh 8080 4300` starts a frontend running on port `8080` and a full node process on port `4300`.
 
 ### Node Blockchain State
