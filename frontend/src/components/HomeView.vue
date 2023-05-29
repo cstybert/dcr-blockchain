@@ -186,7 +186,7 @@ export default {
 
     async executeActivity(activityTitle) {
       const payload = {'actor': "1", 'executingActivity': activityTitle};
-      await axios.put(`DCR/update/${this.currentGraphId}`, payload).then(res => {
+      await axios.put(`DCR/execute/${this.currentGraphId}`, payload).then(res => {
         if (res.status == 200) {
           this.getPendingTransactions();
         }

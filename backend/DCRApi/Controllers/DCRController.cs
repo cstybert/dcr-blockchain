@@ -19,7 +19,7 @@ public class DCRController : ControllerBase
     }
 
     [HttpPost("create")]
-    public IActionResult Post([FromBody] CreateGraphRequest req)
+    public IActionResult CreateGraph([FromBody] CreateGraphRequest req)
     {
         _logger.LogInformation($"Adding graph to blockchain : {req}");
         var graph = new Graph(req.Activities, req.Relations);
@@ -32,7 +32,7 @@ public class DCRController : ControllerBase
     }
 
     [HttpGet("graph/{id}")]
-    public IActionResult Get(string id)
+    public IActionResult GetGraph(string id)
     {
         _logger.LogTrace($"Fetching graph {id}");
         _logger.LogInformation($"Block validity: {_node.Blockchain.IsValid()}");
@@ -41,13 +41,13 @@ public class DCRController : ControllerBase
         if (graph is not null)
         {
             _node.AddDiscoveredGraph(graph);
-            return Ok(_node.Blockchain.GetGraph(id));
+            return Ok(graph);
         }
         return NotFound("Could not find graph");
     }
 
-    [HttpPut("update/{id}")]
-    public IActionResult Put(string id, ExecuteActivityRequest req)
+    [HttpPut("execute/{id}")]
+    public IActionResult ExecuteActivity(string id, ExecuteActivityRequest req)
     {
         _logger.LogInformation($"Executing activity {req.ExecutingActivity} in graph {id}");
         var graph = _node.Blockchain.GetGraph(id)!;
